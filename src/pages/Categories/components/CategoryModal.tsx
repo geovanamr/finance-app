@@ -35,6 +35,16 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({ open, category, on
       setError('Preencha o nome e o ícone.');
       return;
     }
+    const normalizedName = form.name.trim().toLocaleLowerCase('pt-BR');
+    const duplicate = categories.some((item) =>
+      item.id !== category?.id &&
+      item.type === form.type &&
+      item.name.trim().toLocaleLowerCase('pt-BR') === normalizedName
+    );
+    if (duplicate) {
+      setError('Já existe uma categoria com esse nome e tipo.');
+      return;
+    }
 
     setLoading(true);
     try {

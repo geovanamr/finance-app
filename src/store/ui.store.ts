@@ -28,7 +28,7 @@ interface UIState {
   openSubcategoryModal: (categoryId: string) => void;
   closeSubcategoryModal: () => void;
 
-  // Modal de meta de economia
+  // Modal de objetivo mensal de saldo
   savingsGoalModal: boolean;
   openSavingsGoalModal: () => void;
   closeSavingsGoalModal: () => void;

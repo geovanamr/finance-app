@@ -24,7 +24,7 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
   onClose,
   category,
 }) => {
-  const { addSubcategory } = useTransactionStore();
+  const { subcategories, addSubcategory } = useTransactionStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
@@ -38,6 +38,15 @@ export const SubcategoryModal: React.FC<SubcategoryModalProps> = ({
 
     if (!name.trim()) {
       setError('Nome obrigatório.');
+      return;
+    }
+    const normalizedName = name.trim().toLocaleLowerCase('pt-BR');
+    const duplicate = subcategories.some((subcategory) =>
+      subcategory.categoryId === category.id &&
+      subcategory.name.trim().toLocaleLowerCase('pt-BR') === normalizedName
+    );
+    if (duplicate) {
+      setError('Essa subcategoria já existe nesta categoria.');
       return;
     }
 

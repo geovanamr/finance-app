@@ -12,6 +12,7 @@ export const COLLECTIONS = {
   SUBCATEGORIES: 'subcategories',
   SAVINGS_GOALS: 'savingsGoals',
   INSTALLMENT_PLANS: 'installmentPlans',
+  VAULT: 'vault',
 } as const;
 
 // Formato de datas

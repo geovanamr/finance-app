@@ -128,7 +128,7 @@ const buildCostCenterItems = (
 };
 
 /**
- * Calcula o progresso da meta de economia.
+ * Calcula o progresso do objetivo mensal de saldo.
  * Retorna percentual de 0 a 100.
  */
 export const calcSavingsProgress = (

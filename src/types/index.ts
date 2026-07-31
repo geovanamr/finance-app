@@ -92,7 +92,7 @@ export interface MonthlySummary {
   savingsGoalProgress: number; // percentual 0-100
 }
 
-// --- Meta de economia ---
+// --- Objetivo mensal de saldo ---
 
 export interface SavingsGoal {
   id: string;

@@ -72,7 +72,7 @@ export const Reports: React.FC = () => {
       if (format === 'pdf') {
         await exportReportToPDF(report, reportTitle);
       } else {
-        await exportReportToXLSX(report, reportTitle);
+        await exportReportToXLSX(report, reportTitle, categories, subcategories);
       }
     } catch {
       showToast('Erro ao exportar o relatório.', 'error');

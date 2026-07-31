@@ -2,6 +2,9 @@
 
 Controle de gastos pessoais com Firebase, PWA e deploy no GitHub Pages.
 
+Consulte [FUNCIONALIDADES.md](./FUNCIONALIDADES.md) para ver o comportamento
+detalhado de todas as áreas do aplicativo.
+
 ## Configuração
 
 ### 1. Variáveis de ambiente
@@ -39,20 +42,17 @@ npm run build
 ### Configuração do repositório
 
 1. Crie o repositório `finance-app` no GitHub
-2. Vá em **Settings → Secrets and variables → Actions**
-3. Adicione os seguintes secrets com os valores do seu Firebase:
-   - `VITE_FIREBASE_API_KEY`
-   - `VITE_FIREBASE_AUTH_DOMAIN`
-   - `VITE_FIREBASE_PROJECT_ID`
-   - `VITE_FIREBASE_STORAGE_BUCKET`
-   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
-   - `VITE_FIREBASE_APP_ID`
-
-4. Vá em **Settings → Pages** e configure:
+2. Confira as variáveis `VITE_FIREBASE_*` da etapa **Build** em
+   `.github/workflows/deploy.yml`. Elas contêm a configuração pública do SDK
+   Web do projeto Firebase.
+3. Vá em **Settings → Pages** e configure:
    - Source: `Deploy from a branch`
    - Branch: `gh-pages` / `/ (root)`
 
-5. Faça push para a branch `main` — o GitHub Actions fará o deploy automaticamente.
+4. Faça push para a branch `main` — o GitHub Actions fará o deploy automaticamente.
+
+A chave Web do Firebase identifica o projeto, mas não autoriza acesso aos
+dados. A proteção é feita pelo Authentication e pelas regras do Firestore.
 
 ---
 

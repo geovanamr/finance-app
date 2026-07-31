@@ -13,11 +13,12 @@ import {
   query,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import { COLLECTIONS } from '../config/constants';
 import type { VaultEntry, VaultEntryFormData } from '../types';
 import { parseCurrencyInput, roundCurrency } from '../utils/currency';
 
 const vaultCollection = (userId: string) =>
-  collection(db, 'users', userId, 'vault');
+  collection(db, 'users', userId, COLLECTIONS.VAULT);
 
 /**
  * Busca todas as movimentações do cofre, ordenadas por data desc.
@@ -41,11 +42,14 @@ export const createVaultEntry = async (
 ): Promise<VaultEntry> => {
   const amount = parseCurrencyInput(formData.amount);
   if (amount <= 0) throw new Error('Valor inválido.');
+  const description = formData.description.trim();
+  if (!description) throw new Error('Descrição obrigatória.');
+  if (!formData.date) throw new Error('Data obrigatória.');
   const data: Omit<VaultEntry, 'id'> = {
     type: formData.type,
     amount,
     date: formData.date,
-    description: formData.description.trim(),
+    description,
     observation: formData.observation?.trim() ?? '',
     createdAt: new Date().toISOString(),
   };
@@ -60,7 +64,7 @@ export const deleteVaultEntry = async (
   userId: string,
   entryId: string
 ): Promise<void> => {
-  await deleteDoc(doc(db, 'users', userId, 'vault', entryId));
+  await deleteDoc(doc(db, 'users', userId, COLLECTIONS.VAULT, entryId));
 };
 
 /**

@@ -2,7 +2,12 @@
 // UTILITÁRIOS DE EXPORTAÇÃO (PDF e XLSX)
 // ============================================================
 
-import type { CostCenterReport, CostCenterItem } from '../types';
+import type {
+  Category,
+  CostCenterReport,
+  CostCenterItem,
+  Subcategory,
+} from '../types';
 import { formatCurrency } from './currency';
 import { formatDate } from './date';
 
@@ -112,7 +117,9 @@ export const exportReportToPDF = async (
  */
 export const exportReportToXLSX = async (
   report: CostCenterReport,
-  title: string
+  title: string,
+  categories: Category[],
+  subcategories: Subcategory[]
 ): Promise<void> => {
   const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
@@ -148,26 +155,42 @@ export const exportReportToXLSX = async (
   XLSX.utils.book_append_sheet(wb, wsExpense, 'Gastos');
 
   // Aba de transações detalhadas
-  const allTransactions = [
-    ...report.income.flatMap((i) => i.transactions),
-    ...report.expense.flatMap((e) => e.transactions),
-  ];
   const txData = [
     ['Data', 'Tipo', 'Categoria', 'Subcategoria', 'Descrição', 'Observação', 'Valor'],
-    ...allTransactions.map((tx) => [
-      formatDate(tx.date),
-      tx.type === 'income' ? 'Receita' : 'Gasto',
-      tx.categoryId,
-      tx.subcategoryId ?? '',
-      tx.description,
-      tx.observation ?? '',
-      tx.amount,
-    ]),
+    ...buildTransactionExportRows(report, categories, subcategories),
   ];
   const wsTx = XLSX.utils.aoa_to_sheet(txData);
   XLSX.utils.book_append_sheet(wb, wsTx, 'Transações');
 
   XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
+};
+
+/** Monta as linhas detalhadas do Excel usando nomes legíveis, não IDs internos. */
+export const buildTransactionExportRows = (
+  report: CostCenterReport,
+  categories: Category[],
+  subcategories: Subcategory[]
+): Array<Array<string | number>> => {
+  const categoryNames = new Map(categories.map((category) => [category.id, category.name]));
+  const subcategoryNames = new Map(
+    subcategories.map((subcategory) => [subcategory.id, subcategory.name])
+  );
+  const allTransactions = [
+    ...report.income.flatMap((item) => item.transactions),
+    ...report.expense.flatMap((item) => item.transactions),
+  ];
+
+  return allTransactions.map((transaction) => [
+    formatDate(transaction.date),
+    transaction.type === 'income' ? 'Receita' : 'Gasto',
+    categoryNames.get(transaction.categoryId) ?? 'Categoria removida',
+    transaction.subcategoryId
+      ? subcategoryNames.get(transaction.subcategoryId) ?? 'Subcategoria removida'
+      : '',
+    transaction.description,
+    transaction.observation ?? '',
+    transaction.amount,
+  ]);
 };
 
 // --- Helpers internos ---

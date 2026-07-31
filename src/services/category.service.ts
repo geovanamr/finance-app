@@ -109,13 +109,21 @@ export const deleteCategory = async (
     where('categoryId', '==', categoryId),
     limit(1)
   );
-  const [transactions, subcategories] = await Promise.all([
+  const installmentPlansQuery = query(
+    collection(db, 'users', userId, COLLECTIONS.INSTALLMENT_PLANS),
+    where('categoryId', '==', categoryId),
+    limit(1)
+  );
+  const [transactions, subcategories, installmentPlans] = await Promise.all([
     getDocs(transactionsQuery),
     getDocs(subcategoriesQuery),
+    getDocs(installmentPlansQuery),
   ]);
 
-  if (!transactions.empty || !subcategories.empty) {
-    throw new Error('A categoria possui lançamentos ou subcategorias e não pode ser excluída.');
+  if (!transactions.empty || !subcategories.empty || !installmentPlans.empty) {
+    throw new Error(
+      'A categoria possui lançamentos, subcategorias ou parcelamentos e não pode ser excluída.'
+    );
   }
 
   await deleteDoc(doc(db, 'users', userId, COLLECTIONS.CATEGORIES, categoryId));

@@ -26,7 +26,7 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   onClose,
   type,
 }) => {
-  const { addEntry } = useVaultStore();
+  const { addEntry, balance } = useVaultStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
@@ -43,8 +43,11 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   const validate = () => {
     const e: Record<string, string> = {};
     if (!description.trim()) e.description = 'Descrição obrigatória.';
-    if (!amount || parseCurrencyInput(amount) <= 0)
+    const parsedAmount = parseCurrencyInput(amount);
+    if (!amount || parsedAmount <= 0)
       e.amount = 'Valor deve ser maior que zero.';
+    else if (!isDeposit && parsedAmount > balance)
+      e.amount = 'O valor da retirada é maior que o saldo do Cofre.';
     if (!date) e.date = 'Data obrigatória.';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -78,7 +81,10 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
         <Input
           label="Descrição *"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            setErrors((current) => ({ ...current, description: '' }));
+          }}
           placeholder={isDeposit ? 'Ex: Reserva do salário' : 'Ex: Compra do notebook'}
           error={errors.description}
           maxLength={100}
@@ -89,7 +95,10 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
           type="text"
           inputMode="decimal"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            setAmount(e.target.value);
+            setErrors((current) => ({ ...current, amount: '' }));
+          }}
           placeholder="0,00"
           error={errors.amount}
           leftIcon="R$"
@@ -99,7 +108,10 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
           label="Data *"
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setErrors((current) => ({ ...current, date: '' }));
+          }}
           error={errors.date}
         />
 

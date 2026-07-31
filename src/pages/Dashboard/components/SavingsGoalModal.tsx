@@ -1,5 +1,5 @@
 // ============================================================
-// COMPONENTE: SavingsGoalModal — definir meta de economia do mês
+// COMPONENTE: SavingsGoalModal — definir objetivo de saldo do mês
 // ============================================================
 
 import React, { useState } from 'react';
@@ -8,7 +8,10 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useTransactionStore } from '../../../store/transaction.store';
 import { useAuthStore } from '../../../store/auth.store';
-import { upsertSavingsGoal } from '../../../services/savingsGoal.service';
+import {
+  deleteSavingsGoal,
+  upsertSavingsGoal,
+} from '../../../services/savingsGoal.service';
 import { useToast } from '../../../components/ui/Toast';
 import { formatMonthLabel } from '../../../utils/date';
 import styles from './SavingsGoalModal.module.css';
@@ -58,6 +61,23 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!user || !currentGoal) return;
+    if (!confirm(`Remover o objetivo de saldo de ${formatMonthLabel(monthKey)}?`)) return;
+
+    setLoading(true);
+    try {
+      await deleteSavingsGoal(user.uid, monthKey);
+      setCurrentGoal(null);
+      showToast('Objetivo de saldo removido.', 'success');
+      onClose();
+    } catch {
+      showToast('Erro ao remover o objetivo de saldo.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       open={open}
@@ -84,6 +104,17 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
         />
 
         <div className={styles.actions}>
+          {currentGoal && (
+            <Button
+              type="button"
+              variant="danger"
+              className={styles.remove}
+              onClick={() => void handleDelete()}
+              disabled={loading}
+            >
+              Remover objetivo
+            </Button>
+          )}
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
