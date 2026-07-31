@@ -32,14 +32,14 @@ export const SummaryCards: React.FC = () => {
         (monthlySummary?.balance ?? 0) >= 0 ? styles.income : styles.expense,
     },
     {
-      label: 'Meta',
+      label: 'Saldo desejado',
       icon: '🎯',
       value: monthlySummary?.savingsGoal ?? 0,
       colorClass: styles.goal,
       extra:
         monthlySummary?.savingsGoal
           ? `${monthlySummary.savingsGoalProgress}% atingido`
-          : 'Não definida',
+          : 'Não definido',
     },
   ];
 

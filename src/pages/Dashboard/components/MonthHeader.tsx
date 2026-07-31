@@ -29,10 +29,10 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
           <h1 className={styles.month}>{formatMonthLabel(monthKey)}</h1>
           {monthlySummary?.savingsGoal ? (
             <p className={styles.goal}>
-              Meta: <strong>{privateCurrency(monthlySummary.savingsGoal)}</strong>
+              Saldo desejado: <strong>{privateCurrency(monthlySummary.savingsGoal)}</strong>
             </p>
           ) : (
-            <p className={styles.noGoal}>Sem meta definida</p>
+            <p className={styles.noGoal}>Sem saldo desejado</p>
           )}
         </div>
         <div className={styles.actions}>
@@ -40,7 +40,7 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
             🏷️ Categorias
           </Button>
           <Button variant="ghost" size="sm" onClick={openSavingsGoalModal}>
-            🎯 Meta
+            🎯 Objetivo
           </Button>
         </div>
       </div>

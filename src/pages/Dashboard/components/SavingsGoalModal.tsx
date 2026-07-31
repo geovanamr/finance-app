@@ -49,10 +49,10 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
     try {
       const goal = await upsertSavingsGoal(user.uid, { amount, monthKey });
       setCurrentGoal(goal);
-      showToast('Meta definida com sucesso!', 'success');
+      showToast('Objetivo de saldo salvo!', 'success');
       onClose();
     } catch {
-      showToast('Erro ao salvar meta.', 'error');
+      showToast('Erro ao salvar o objetivo de saldo.', 'error');
     } finally {
       setLoading(false);
     }
@@ -62,16 +62,17 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
     <Modal
       open={open}
       onClose={onClose}
-      title={`🎯 Meta de economia — ${formatMonthLabel(monthKey)}`}
+      title={`🎯 Quanto você quer que sobre em ${formatMonthLabel(monthKey)}?`}
       size="sm"
     >
       <form onSubmit={handleSubmit} className={styles.form} noValidate>
         <p className={styles.hint}>
-          Defina quanto deseja economizar neste mês. O progresso será exibido no dashboard.
+          Informe o saldo que deseja ter no fim do mês. Ele será comparado ao valor das
+          receitas menos os gastos. Nenhum dinheiro será movimentado para o Cofre.
         </p>
 
         <Input
-          label="Meta (R$) *"
+          label="Saldo desejado (R$) *"
           type="text"
           inputMode="decimal"
           value={amount}
@@ -87,7 +88,7 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
             Cancelar
           </Button>
           <Button type="submit" loading={loading}>
-            Salvar meta
+            {currentGoal ? 'Atualizar objetivo' : 'Definir objetivo'}
           </Button>
         </div>
       </form>
