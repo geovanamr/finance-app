@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import type { VaultEntry } from '../types';
-import { calcVaultBalance } from '../services/vault.service';
+import { calcVaultBalance } from '../utils/vault';
 
 interface VaultState {
   entries: VaultEntry[];

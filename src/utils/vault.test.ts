@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { VaultEntry } from '../types';
-import { calcVaultBalance } from './vault.service';
+import { calcVaultBalance } from './vault';
 
 const entry = (overrides: Partial<VaultEntry>): VaultEntry => ({
   id: 'entry-1',

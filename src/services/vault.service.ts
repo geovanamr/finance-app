@@ -15,7 +15,7 @@ import {
 import { db } from '../config/firebase';
 import { COLLECTIONS } from '../config/constants';
 import type { VaultEntry, VaultEntryFormData } from '../types';
-import { parseCurrencyInput, roundCurrency } from '../utils/currency';
+import { parseCurrencyInput } from '../utils/currency';
 
 const vaultCollection = (userId: string) =>
   collection(db, 'users', userId, COLLECTIONS.VAULT);
@@ -66,12 +66,3 @@ export const deleteVaultEntry = async (
 ): Promise<void> => {
   await deleteDoc(doc(db, 'users', userId, COLLECTIONS.VAULT, entryId));
 };
-
-/**
- * Calcula o saldo atual do cofre a partir das movimentações.
- */
-export const calcVaultBalance = (entries: VaultEntry[]): number =>
-  roundCurrency(entries.reduce(
-    (sum, e) => (e.type === 'deposit' ? sum + e.amount : sum - e.amount),
-    0
-  ));
