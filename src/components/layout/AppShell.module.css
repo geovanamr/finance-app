@@ -1,0 +1,29 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.main {
+  flex: 1;
+  /* Espaço para o bottom nav no mobile */
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+}
+
+.content {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+/* Desktop: sem padding-bottom do bottom nav */
+@media (min-width: 768px) {
+  .main {
+    padding-bottom: 0;
+  }
+
+  .content {
+    max-width: var(--max-desktop-width);
+    padding: var(--space-8) var(--space-6);
+  }
+}

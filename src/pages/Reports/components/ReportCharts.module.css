@@ -1,0 +1,29 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.chartCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+}
+
+.chartTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .wrapper {
+    flex-direction: row;
+  }
+
+  .chartCard {
+    flex: 1;
+  }
+}

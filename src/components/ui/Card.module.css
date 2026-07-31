@@ -1,0 +1,38 @@
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* --- Padding --- */
+.padding-sm { padding: var(--space-3); }
+.padding-md { padding: var(--space-5); }
+.padding-lg { padding: var(--space-8); }
+
+/* --- Acentos laterais --- */
+.accent-income  { border-left: 4px solid var(--color-income); }
+.accent-expense { border-left: 4px solid var(--color-expense); }
+.accent-primary { border-left: 4px solid var(--color-primary); }
+.accent-warning { border-left: 4px solid var(--color-warning); }
+
+/* --- Clicável --- */
+.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.clickable:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.clickable:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+}

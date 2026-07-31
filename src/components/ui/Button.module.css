@@ -1,0 +1,130 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-full);
+  font-weight: var(--font-weight-semibold);
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+  border: 2px solid transparent;
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--color-primary-light);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Tamanhos --- */
+.sm {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  min-height: 32px;
+}
+
+.md {
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--font-size-md);
+  min-height: 44px;
+}
+
+.lg {
+  padding: var(--space-3) var(--space-8);
+  font-size: var(--font-size-lg);
+  min-height: 52px;
+}
+
+/* --- Variantes --- */
+.primary {
+  background: var(--gradient-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.danger {
+  background: var(--color-expense);
+  color: var(--color-text-inverse);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--color-expense-dark);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-text-secondary);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+}
+
+.income {
+  background: var(--gradient-income);
+  color: var(--color-text-inverse);
+}
+
+.expense {
+  background: var(--gradient-expense);
+  color: var(--color-text-inverse);
+}
+
+/* --- Modificadores --- */
+.fullWidth {
+  width: 100%;
+}
+
+/* --- Loading spinner --- */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin var(--transition-slow) linear infinite;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+}
+
+/* Dark mode: botão primary com verde e texto escuro */
+:global([data-theme="dark"]) .primary {
+  background: #1fffb3;
+  color: #071612;
+  box-shadow: 0 2px 8px rgba(31, 255, 179, 0.3);
+}
+
+:global([data-theme="dark"]) .primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(31, 255, 179, 0.45);
+}

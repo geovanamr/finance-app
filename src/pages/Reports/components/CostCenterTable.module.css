@@ -1,0 +1,105 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.section {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-md);
+  border-bottom: 2px solid;
+}
+
+.income {
+  color: var(--color-income);
+  border-color: var(--color-income);
+}
+
+.expense {
+  color: var(--color-expense);
+  border-color: var(--color-expense);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+th {
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.thTotal { text-align: right; }
+
+.row {
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.row:hover {
+  background: var(--color-surface-2);
+}
+
+.expandable {
+  cursor: pointer;
+}
+
+/* Nível 1 — categorias */
+.level1 td {
+  padding: var(--space-3) var(--space-4);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Nível 2 — subcategorias */
+.level2 td {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-2);
+  color: var(--color-text-secondary);
+}
+
+.tdCode {
+  width: 80px;
+  color: var(--color-text-muted);
+  font-family: monospace;
+  font-size: var(--font-size-xs);
+}
+
+.tdName {
+  flex: 1;
+}
+
+.tdTotal {
+  text-align: right;
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+.toggle {
+  margin-right: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}

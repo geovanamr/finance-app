@@ -1,0 +1,155 @@
+.totalBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+  margin-bottom: var(--space-5);
+}
+
+.totalLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-medium);
+}
+
+.totalValue {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.section {
+  margin-bottom: var(--space-5);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.empty {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+/* Subcategorias */
+.subList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.subItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+}
+
+.subName {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+.subTotal {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Transações */
+.txList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.txItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+}
+
+.txLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.txDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.txDesc {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txSub {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.txObs {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.txRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.txAmount {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.txActions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.editBtn,
+.deleteBtn {
+  font-size: 0.9rem;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+.editBtn:hover,
+.deleteBtn:hover {
+  background: var(--color-border);
+}

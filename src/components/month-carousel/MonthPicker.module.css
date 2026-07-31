@@ -1,0 +1,135 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Botão de calendário ao lado do mês */
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  margin-left: var(--space-2);
+}
+
+.trigger:hover {
+  background: var(--color-surface-2);
+  color: var(--color-primary);
+}
+
+/* Popover */
+.popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4);
+  z-index: var(--z-dropdown);
+  width: 240px;
+  animation: fadeIn var(--transition-fast) forwards;
+}
+
+/* Navegação de ano */
+.yearNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.yearBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.yearBtn:hover {
+  background: var(--color-surface-2);
+  color: var(--color-primary);
+}
+
+.yearLabel {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.currentBadge {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
+/* Grade de meses */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-1);
+}
+
+.monthBtn {
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-align: center;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.monthBtn:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+}
+
+/* Mês atual (não selecionado) */
+.current {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Mês selecionado */
+.selected {
+  background: var(--color-primary) !important;
+  color: white !important;
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Dark mode: texto escuro sobre o verde */
+:global([data-theme="dark"]) .selected {
+  color: #071612 !important;
+}
+
+/* Mobile: popover centralizado na tela */
+@media (max-width: 480px) {
+  .popover {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: calc(100vw - 2rem);
+    max-width: 280px;
+  }
+}

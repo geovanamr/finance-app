@@ -1,0 +1,237 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  animation: fadeIn var(--transition-normal) forwards;
+}
+
+/* ── Saldo ─────────────────────────────────────────────── */
+.balanceCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  background: linear-gradient(135deg, #f9a825 0%, #fb8c00 100%);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10) var(--space-6) var(--space-8);
+  box-shadow: 0 8px 28px rgba(249, 168, 37, 0.4);
+  overflow: hidden;
+}
+
+/* Círculo decorativo de fundo */
+.balanceCard::before {
+  content: '';
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  top: -60px;
+  right: -40px;
+  pointer-events: none;
+}
+
+.balanceCard::after {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  bottom: -40px;
+  left: -20px;
+  pointer-events: none;
+}
+
+.balanceIconWrapper {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+}
+
+.balanceLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.balanceValue {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  letter-spacing: -0.5px;
+}
+
+.balanceCount {
+  font-size: var(--font-size-xs);
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: var(--space-1);
+}
+
+/* ── Ações ─────────────────────────────────────────────── */
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+/* ── Histórico ─────────────────────────────────────────── */
+.history {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.historyTitle {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.historyCount {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.emptyIcon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Entrada do histórico ──────────────────────────────── */
+.entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.entry:last-child {
+  border-bottom: none;
+}
+
+.entry:hover {
+  background: var(--color-surface-2);
+}
+
+.entryIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entryIconDeposit {
+  background: var(--color-income-light);
+  color: var(--color-income);
+}
+
+.entryIconWithdraw {
+  background: var(--color-expense-light);
+  color: var(--color-expense);
+}
+
+.entryInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.entryDesc {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entryMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.entryObs {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.entryRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.entryAmount {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.deposit  { color: var(--color-income); }
+.withdraw { color: var(--color-expense); }
+
+.deleteBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.deleteBtn:hover {
+  background: var(--color-expense-light);
+  color: var(--color-expense);
+}
