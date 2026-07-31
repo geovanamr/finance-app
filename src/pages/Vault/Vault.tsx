@@ -2,10 +2,10 @@
 // PÁGINA: Vault — Cofre
 // ============================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useVaultStore } from '../../store/vault.store';
 import { useAuthStore } from '../../store/auth.store';
-import { getVaultEntries, deleteVaultEntry } from '../../services/vault.service';
+import { deleteVaultEntry } from '../../services/vault.service';
 import { formatDate } from '../../utils/date';
 
 import { Button } from '../../components/ui/Button';
@@ -44,27 +44,12 @@ const WithdrawIcon = () => (
 );
 
 export const Vault: React.FC = () => {
-  const { entries, balance, loading, setEntries, setLoading, removeEntry } = useVaultStore();
+  const { entries, balance, loading, removeEntry } = useVaultStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<VaultEntryType>('deposit');
-
-  useEffect(() => {
-    if (!user) return;
-    const load = async () => {
-      setLoading(true);
-      try {
-        const data = await getVaultEntries(user.uid);
-        setEntries(data);
-      } catch {
-        showToast('Erro ao carregar cofre.', 'error');
-        setLoading(false);
-      }
-    };
-    load();
-  }, [user]);
 
   const handleDelete = async (id: string, description: string) => {
     if (!user) return;

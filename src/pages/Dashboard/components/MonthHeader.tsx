@@ -5,6 +5,8 @@ import { useTransactionStore } from '../../../store/transaction.store';
 import { Button } from '../../../components/ui/Button';
 import { SavingsGoalModal } from './SavingsGoalModal';
 import styles from './MonthHeader.module.css';
+import { usePrivacy } from '../../../context/PrivacyContext';
+import { useNavigate } from 'react-router-dom';
 
 interface MonthHeaderProps {
   monthKey: string;
@@ -17,6 +19,8 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
     closeSavingsGoalModal,
   } = useUIStore();
   const { monthlySummary } = useTransactionStore();
+  const { privateCurrency } = usePrivacy();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -25,24 +29,29 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
           <h1 className={styles.month}>{formatMonthLabel(monthKey)}</h1>
           {monthlySummary?.savingsGoal ? (
             <p className={styles.goal}>
-              Meta: <strong>R$ {monthlySummary.savingsGoal.toFixed(2).replace('.', ',')}</strong>
+              Meta: <strong>{privateCurrency(monthlySummary.savingsGoal)}</strong>
             </p>
           ) : (
             <p className={styles.noGoal}>Sem meta definida</p>
           )}
         </div>
         <div className={styles.actions}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/categories')}>
+            🏷️ Categorias
+          </Button>
           <Button variant="ghost" size="sm" onClick={openSavingsGoalModal}>
             🎯 Meta
           </Button>
         </div>
       </div>
 
-      <SavingsGoalModal
-        open={savingsGoalModal}
-        onClose={closeSavingsGoalModal}
-        monthKey={monthKey}
-      />
+      {savingsGoalModal && (
+        <SavingsGoalModal
+          open
+          onClose={closeSavingsGoalModal}
+          monthKey={monthKey}
+        />
+      )}
     </>
   );
 };

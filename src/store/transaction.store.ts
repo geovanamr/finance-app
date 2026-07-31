@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import type { Transaction, Subcategory, SavingsGoal, MonthlySummary } from '../types';
 import { calcSavingsProgress } from '../utils/reports';
+import { roundCurrency } from '../utils/currency';
 
 interface TransactionState {
   // Dados
@@ -32,6 +33,7 @@ interface TransactionState {
   removeTransaction: (id: string) => void;
   addSubcategory: (subcategory: Subcategory) => void;
   removeSubcategory: (id: string) => void;
+  reset: () => void;
 }
 
 const calcSummary = (
@@ -39,15 +41,15 @@ const calcSummary = (
   monthKey: string,
   goal: SavingsGoal | null
 ): MonthlySummary => {
-  const totalIncome = transactions
+  const totalIncome = roundCurrency(transactions
     .filter((tx) => tx.type === 'income')
-    .reduce((sum, tx) => sum + tx.amount, 0);
+    .reduce((sum, tx) => sum + tx.amount, 0));
 
-  const totalExpense = transactions
+  const totalExpense = roundCurrency(transactions
     .filter((tx) => tx.type === 'expense')
-    .reduce((sum, tx) => sum + tx.amount, 0);
+    .reduce((sum, tx) => sum + tx.amount, 0));
 
-  const balance = totalIncome - totalExpense;
+  const balance = roundCurrency(totalIncome - totalExpense);
   const savingsGoal = goal?.amount ?? 0;
 
   return {
@@ -93,6 +95,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
 
   addTransaction: (transaction) => {
     const { transactions, monthlySummary, currentGoal } = get();
+    if (!monthlySummary || transaction.monthKey !== monthlySummary.monthKey) return;
     const updated = [transaction, ...transactions];
     set({
       transactions: updated,
@@ -104,7 +107,10 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
 
   updateTransaction: (id, data) => {
     const { transactions, monthlySummary, currentGoal } = get();
-    const updated = transactions.map((tx) => (tx.id === id ? { ...tx, ...data } : tx));
+    const updated = transactions
+      .map((tx) => (tx.id === id ? { ...tx, ...data } : tx))
+      .filter((tx) => !monthlySummary || tx.monthKey === monthlySummary.monthKey)
+      .sort((a, b) => b.date.localeCompare(a.date));
     set({
       transactions: updated,
       monthlySummary: monthlySummary
@@ -131,4 +137,14 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     set((state) => ({
       subcategories: state.subcategories.filter((s) => s.id !== id),
     })),
+
+  reset: () =>
+    set({
+      transactions: [],
+      subcategories: [],
+      currentGoal: null,
+      loadingTransactions: false,
+      loadingSubcategories: false,
+      monthlySummary: null,
+    }),
 }));

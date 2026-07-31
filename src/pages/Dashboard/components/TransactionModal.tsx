@@ -2,7 +2,7 @@
 // COMPONENTE: TransactionModal — formulário de transação
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -11,13 +11,15 @@ import { useAuthStore } from '../../../store/auth.store';
 import { createTransaction, updateTransaction } from '../../../services/transaction.service';
 import { useToast } from '../../../components/ui/Toast';
 import type { Category, Transaction, TransactionFormData } from '../../../types';
+import { dateToMonthKey, getDefaultDateForMonth } from '../../../utils/date';
+import { parseCurrencyInput } from '../../../utils/currency';
 import styles from './TransactionModal.module.css';
 
 interface TransactionModalProps {
   open: boolean;
   onClose: () => void;
   category: Category;
-  monthKey?: string;
+  monthKey: string;
   editingTransaction?: Transaction | null;
 }
 
@@ -25,6 +27,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   open,
   onClose,
   category,
+  monthKey,
   editingTransaction,
 }) => {
   const { subcategories, addTransaction, updateTransaction: updateStore } =
@@ -35,45 +38,32 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const categorySubs = subcategories.filter((s) => s.categoryId === category.id);
 
   // Estado do formulário
-  const [form, setForm] = useState<TransactionFormData>({
-    categoryId: category.id,
-    subcategoryId: '',
-    description: '',
-    amount: '',
-    date: new Date().toISOString().slice(0, 10),
-    observation: '',
-  });
+  const [form, setForm] = useState<TransactionFormData>(() =>
+    editingTransaction
+      ? {
+          categoryId: editingTransaction.categoryId,
+          subcategoryId: editingTransaction.subcategoryId ?? '',
+          description: editingTransaction.description,
+          amount: editingTransaction.amount.toFixed(2).replace('.', ','),
+          date: editingTransaction.date,
+          observation: editingTransaction.observation ?? '',
+        }
+      : {
+          categoryId: category.id,
+          subcategoryId: '',
+          description: '',
+          amount: '',
+          date: getDefaultDateForMonth(monthKey),
+          observation: '',
+        }
+  );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionFormData, string>>>({});
-
-  // Preenche o formulário ao editar
-  useEffect(() => {
-    if (editingTransaction) {
-      setForm({
-        categoryId: editingTransaction.categoryId,
-        subcategoryId: editingTransaction.subcategoryId ?? '',
-        description: editingTransaction.description,
-        amount: editingTransaction.amount.toFixed(2).replace('.', ','),
-        date: editingTransaction.date,
-        observation: editingTransaction.observation ?? '',
-      });
-    } else {
-      setForm({
-        categoryId: category.id,
-        subcategoryId: '',
-        description: '',
-        amount: '',
-        date: new Date().toISOString().slice(0, 10),
-        observation: '',
-      });
-    }
-    setErrors({});
-  }, [editingTransaction, open]);
 
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
     if (!form.description.trim()) newErrors.description = 'Descrição obrigatória.';
-    if (!form.amount || parseFloat(form.amount.replace(',', '.')) <= 0)
+    if (!form.amount || parseCurrencyInput(form.amount) <= 0)
       newErrors.amount = 'Valor deve ser maior que zero.';
     if (!form.date) newErrors.date = 'Data obrigatória.';
     setErrors(newErrors);
@@ -90,8 +80,9 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         await updateTransaction(user.uid, editingTransaction.id, form);
         updateStore(editingTransaction.id, {
           ...form,
-          amount: parseFloat(form.amount.replace(',', '.')),
+          amount: parseCurrencyInput(form.amount),
           subcategoryId: form.subcategoryId || undefined,
+          monthKey: dateToMonthKey(form.date),
         });
         showToast('Lançamento atualizado!', 'success');
       } else {

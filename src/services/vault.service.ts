@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { VaultEntry, VaultEntryFormData } from '../types';
+import { parseCurrencyInput, roundCurrency } from '../utils/currency';
 
 const vaultCollection = (userId: string) =>
   collection(db, 'users', userId, 'vault');
@@ -38,7 +39,8 @@ export const createVaultEntry = async (
   userId: string,
   formData: VaultEntryFormData
 ): Promise<VaultEntry> => {
-  const amount = parseFloat(formData.amount.replace(',', '.'));
+  const amount = parseCurrencyInput(formData.amount);
+  if (amount <= 0) throw new Error('Valor inválido.');
   const data: Omit<VaultEntry, 'id'> = {
     type: formData.type,
     amount,
@@ -65,7 +67,7 @@ export const deleteVaultEntry = async (
  * Calcula o saldo atual do cofre a partir das movimentações.
  */
 export const calcVaultBalance = (entries: VaultEntry[]): number =>
-  entries.reduce(
+  roundCurrency(entries.reduce(
     (sum, e) => (e.type === 'deposit' ? sum + e.amount : sum - e.amount),
     0
-  );
+  ));

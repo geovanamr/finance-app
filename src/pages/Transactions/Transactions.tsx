@@ -9,12 +9,12 @@ import { useTransactionStore } from '../../store/transaction.store';
 import { useAuthStore } from '../../store/auth.store';
 import { getTransactionsByMonth } from '../../services/transaction.service';
 import { getSavingsGoalByMonth } from '../../services/savingsGoal.service';
-import { getCategoryById } from '../../config/categories';
-import { formatCurrency } from '../../utils/currency';
 import { formatDate } from '../../utils/date';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
 import styles from './Transactions.module.css';
+import { usePrivacy } from '../../context/PrivacyContext';
+import { useCategoryStore } from '../../store/category.store';
 
 export const Transactions: React.FC = () => {
   const { selectedMonthKey, setSelectedMonthKey } = useUIStore();
@@ -22,9 +22,12 @@ export const Transactions: React.FC = () => {
     useTransactionStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const { privateCurrency } = usePrivacy();
+  const categories = useCategoryStore((state) => state.categories);
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     const load = async () => {
       useTransactionStore.getState().setLoadingTransactions(true);
       try {
@@ -32,14 +35,17 @@ export const Transactions: React.FC = () => {
           getTransactionsByMonth(user.uid, selectedMonthKey),
           getSavingsGoalByMonth(user.uid, selectedMonthKey),
         ]);
-        setTransactions(txs, selectedMonthKey, goal);
+        if (!cancelled) setTransactions(txs, selectedMonthKey, goal);
       } catch {
-        showToast('Erro ao carregar lançamentos.', 'error');
-        useTransactionStore.getState().setLoadingTransactions(false);
+        if (!cancelled) {
+          showToast('Erro ao carregar lançamentos.', 'error');
+          useTransactionStore.getState().setLoadingTransactions(false);
+        }
       }
     };
     load();
-  }, [selectedMonthKey, user]);
+    return () => { cancelled = true; };
+  }, [selectedMonthKey, setTransactions, showToast, user]);
 
   const getSubName = (categoryId: string, subId?: string) => {
     if (!subId) return null;
@@ -56,7 +62,7 @@ export const Transactions: React.FC = () => {
     return (
       <div className={styles.list}>
         {list.map((tx) => {
-          const category = getCategoryById(tx.categoryId);
+          const category = categories.find((item) => item.id === tx.categoryId);
           const subName = getSubName(tx.categoryId, tx.subcategoryId);
           return (
             <div key={tx.id} className={styles.txItem}>
@@ -79,7 +85,7 @@ export const Transactions: React.FC = () => {
                   type === 'income' ? styles.income : styles.expense,
                 ].join(' ')}
               >
-                {type === 'income' ? '+' : '-'} {formatCurrency(tx.amount)}
+                {type === 'income' ? '+' : '-'} {privateCurrency(tx.amount)}
               </span>
             </div>
           );

@@ -47,7 +47,9 @@ export const BottomNav: React.FC = () => {
         </button>
       </nav>
 
-      <InstallmentModal open={installmentModal} onClose={closeInstallmentModal} />
+      {installmentModal && (
+        <InstallmentModal open onClose={closeInstallmentModal} />
+      )}
     </>
   );
 };

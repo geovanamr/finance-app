@@ -22,6 +22,24 @@
   gap: var(--space-2);
 }
 
+.logoutBtn {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  color: var(--color-expense);
+  border: 1px solid var(--color-border-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.iconBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border-strong);
+}
+
 /* Desktop: esconde o mobile header */
 @media (min-width: 768px) {
   .header {

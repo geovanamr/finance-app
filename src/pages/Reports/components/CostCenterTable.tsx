@@ -3,9 +3,9 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { formatCurrency } from '../../../utils/currency';
 import type { CostCenterReport, CostCenterItem } from '../../../types';
 import styles from './CostCenterTable.module.css';
+import { usePrivacy } from '../../../context/PrivacyContext';
 
 interface CostCenterTableProps {
   report: CostCenterReport;
@@ -30,13 +30,14 @@ interface SectionProps {
 }
 
 const Section: React.FC<SectionProps> = ({ title, items, total, type }) => {
+  const { privateCurrency } = usePrivacy();
   if (items.length === 0) return null;
 
   return (
     <div className={styles.section}>
       <div className={[styles.sectionHeader, styles[type]].join(' ')}>
         <span>{title}</span>
-        <span>{formatCurrency(total)}</span>
+        <span>{privateCurrency(total)}</span>
       </div>
       <table className={styles.table}>
         <thead>
@@ -65,6 +66,7 @@ interface CategoryRowProps {
 
 const CategoryRow: React.FC<CategoryRowProps> = ({ item, type }) => {
   const [expanded, setExpanded] = useState(true);
+  const { privateCurrency } = usePrivacy();
   const hasChildren = (item.children?.length ?? 0) > 0;
 
   return (
@@ -81,7 +83,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ item, type }) => {
           {item.name}
         </td>
         <td className={[styles.tdTotal, styles[type]].join(' ')}>
-          {formatCurrency(item.total)}
+          {privateCurrency(item.total)}
         </td>
       </tr>
 
@@ -90,7 +92,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({ item, type }) => {
           <tr key={child.code} className={[styles.row, styles.level2].join(' ')}>
             <td className={styles.tdCode}>{child.code}</td>
             <td className={styles.tdName}>{child.name}</td>
-            <td className={styles.tdTotal}>{formatCurrency(child.total)}</td>
+            <td className={styles.tdTotal}>{privateCurrency(child.total)}</td>
           </tr>
         ))}
     </>

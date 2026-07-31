@@ -10,17 +10,20 @@ import { useToast } from '../ui/Toast';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { PrivacyToggle } from '../ui/PrivacyToggle';
 import styles from './TopNav.module.css';
+import { useUIStore } from '../../store/ui.store';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: '🏠 Início' },
   { to: '/transactions', label: '💸 Lançamentos' },
   { to: '/vault', label: '🏦 Cofre' },
+  { to: '/categories', label: '🏷️ Categorias' },
   { to: '/reports', label: '📊 Relatórios' },
 ];
 
 export const TopNav: React.FC = () => {
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const openInstallmentModal = useUIStore((state) => state.openInstallmentModal);
 
   const handleLogout = async () => {
     try {
@@ -47,6 +50,9 @@ export const TopNav: React.FC = () => {
               {item.label}
             </NavLink>
           ))}
+          <button className={styles.link} onClick={openInstallmentModal}>
+            📅 Parcelar
+          </button>
         </nav>
 
         <div className={styles.user}>

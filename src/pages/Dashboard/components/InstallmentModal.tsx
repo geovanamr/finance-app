@@ -2,17 +2,20 @@
 // COMPONENTE: InstallmentModal — lançamentos futuros parcelados
 // ============================================================
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useTransactionStore } from '../../../store/transaction.store';
 import { useAuthStore } from '../../../store/auth.store';
-import { createInstallmentPlan, calcFirstInstallmentDate } from '../../../services/installment.service';
+import { createInstallmentPlan } from '../../../services/installment.service';
 import { useToast } from '../../../components/ui/Toast';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '../../../config/categories';
 import type { InstallmentFormData } from '../../../types';
 import styles from './InstallmentModal.module.css';
+import { getLocalISODate } from '../../../utils/date';
+import { parseCurrencyInput } from '../../../utils/currency';
+import { calcFirstInstallmentDate, distributeInstallmentAmounts } from '../../../utils/installments';
+import { useCategoryStore } from '../../../store/category.store';
 
 interface InstallmentModalProps {
   open: boolean;
@@ -26,7 +29,7 @@ const EMPTY_FORM: InstallmentFormData = {
   totalAmount: '',
   installmentAmount: '',
   totalInstallments: '',
-  purchaseDate: new Date().toISOString().slice(0, 10),
+  purchaseDate: getLocalISODate(),
   observation: '',
 };
 
@@ -34,6 +37,9 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
   const { subcategories, addTransaction } = useTransactionStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const categories = useCategoryStore((state) => state.categories);
+  const expenseCategories = categories.filter((category) => category.type === 'expense');
+  const incomeCategories = categories.filter((category) => category.type === 'income');
 
   const [form, setForm] = useState<InstallmentFormData>(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
@@ -50,8 +56,8 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
   // Recalcula o valor da parcela automaticamente quando muda total ou qtd parcelas
   const recalcInstallment = useCallback(
     (totalAmount: string, totalInstallments: string) => {
-      const total = parseFloat(totalAmount.replace(',', '.'));
-      const qty = parseInt(totalInstallments, 10);
+      const total = parseCurrencyInput(totalAmount);
+      const qty = Number(totalInstallments);
       if (!isNaN(total) && total > 0 && !isNaN(qty) && qty > 0) {
         return (total / qty).toFixed(2).replace('.', ',');
       }
@@ -59,14 +65,6 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
     },
     []
   );
-
-  // Reseta o formulário ao abrir/fechar
-  useEffect(() => {
-    if (open) {
-      setForm(EMPTY_FORM);
-      setErrors({});
-    }
-  }, [open]);
 
   const handleTotalAmountChange = (value: string) => {
     const newInstallment = recalcInstallment(value, form.totalInstallments);
@@ -86,11 +84,14 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
     const newErrors: typeof errors = {};
     if (!form.categoryId) newErrors.categoryId = 'Selecione uma categoria.';
     if (!form.description.trim()) newErrors.description = 'Descrição obrigatória.';
-    if (!form.totalAmount || parseFloat(form.totalAmount.replace(',', '.')) <= 0)
+    if (!form.totalAmount || parseCurrencyInput(form.totalAmount) <= 0)
       newErrors.totalAmount = 'Valor total deve ser maior que zero.';
-    if (!form.totalInstallments || parseInt(form.totalInstallments, 10) < 1)
+    const installmentCount = Number(form.totalInstallments);
+    if (!Number.isInteger(installmentCount) || installmentCount < 1)
       newErrors.totalInstallments = 'Informe ao menos 1 parcela.';
-    if (!form.installmentAmount || parseFloat(form.installmentAmount.replace(',', '.')) <= 0)
+    if (installmentCount > 360)
+      newErrors.totalInstallments = 'O limite é de 360 parcelas.';
+    if (!form.installmentAmount || parseCurrencyInput(form.installmentAmount) <= 0)
       newErrors.installmentAmount = 'Valor da parcela inválido.';
     if (!form.purchaseDate) newErrors.purchaseDate = 'Data da compra obrigatória.';
     setErrors(newErrors);
@@ -105,7 +106,7 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
     try {
       const { transactions } = await createInstallmentPlan(user.uid, form);
       // Adiciona ao store apenas as parcelas do mês atual visível
-      transactions.forEach((tx) => addTransaction(tx));
+      transactions.forEach(addTransaction);
       showToast(
         `${transactions.length} parcela${transactions.length > 1 ? 's' : ''} criada${transactions.length > 1 ? 's' : ''} com sucesso!`,
         'success'
@@ -121,10 +122,17 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
 
   // Preview das parcelas geradas
   const previewInstallments = () => {
-    const qty = parseInt(form.totalInstallments, 10);
+    const qty = Number(form.totalInstallments);
     const desc = form.description.trim();
-    const amount = parseFloat(form.installmentAmount.replace(',', '.'));
-    if (!qty || !desc || !firstInstallmentDate || isNaN(amount)) return [];
+    const total = parseCurrencyInput(form.totalAmount);
+    if (!qty || !desc || !firstInstallmentDate || total <= 0) return [];
+
+    let amounts: number[];
+    try {
+      amounts = distributeInstallmentAmounts(total, qty);
+    } catch {
+      return [];
+    }
 
     const [fy, fm] = firstInstallmentDate.split('-').map(Number);
     return Array.from({ length: Math.min(qty, 4) }, (_, i) => {
@@ -133,7 +141,7 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
       return {
         label: `${i + 1}/${qty} ${desc}`,
         month: monthLabel,
-        amount,
+        amount: amounts[i],
       };
     });
   };
@@ -157,14 +165,14 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
             >
               <option value="">— Selecione —</option>
               <optgroup label="Despesas">
-                {EXPENSE_CATEGORIES.map((c) => (
+                {expenseCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.icon} {c.name}
                   </option>
                 ))}
               </optgroup>
               <optgroup label="Receitas">
-                {INCOME_CATEGORIES.map((c) => (
+                {incomeCategories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.icon} {c.name}
                   </option>
@@ -260,10 +268,10 @@ export const InstallmentModal: React.FC<InstallmentModalProps> = ({ open, onClos
             type="text"
             inputMode="decimal"
             value={form.installmentAmount}
-            onChange={(e) => setForm((f) => ({ ...f, installmentAmount: e.target.value }))}
             placeholder="0,00"
             error={errors.installmentAmount}
             leftIcon="R$"
+            readOnly
           />
         </div>
 

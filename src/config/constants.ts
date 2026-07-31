@@ -7,6 +7,7 @@ export const APP_VERSION = '1.0.0';
 
 // Coleções do Firestore
 export const COLLECTIONS = {
+  CATEGORIES: 'categories',
   TRANSACTIONS: 'transactions',
   SUBCATEGORIES: 'subcategories',
   SAVINGS_GOALS: 'savingsGoals',

@@ -15,9 +15,9 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { formatCurrency } from '../../../utils/currency';
 import type { CostCenterReport } from '../../../types';
 import styles from './ReportCharts.module.css';
+import { usePrivacy } from '../../../context/PrivacyContext';
 
 interface ReportChartsProps {
   report: CostCenterReport;
@@ -31,6 +31,7 @@ const PIE_COLORS = [
 ];
 
 export const ReportCharts: React.FC<ReportChartsProps> = ({ report }) => {
+  const { privateCurrency } = usePrivacy();
   // Dados para o gráfico de pizza de gastos por categoria
   const expensePieData = report.expense.map((item) => ({
     name: item.name,
@@ -44,9 +45,8 @@ export const ReportCharts: React.FC<ReportChartsProps> = ({ report }) => {
     { name: 'Saldo', value: Math.abs(report.balance), fill: report.balance >= 0 ? '#3498db' : '#e67e22' },
   ];
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const formatTooltip = (value: any) => {
-    if (typeof value === 'number') return formatCurrency(value);
+  const formatTooltip = (value: unknown) => {
+    if (typeof value === 'number') return privateCurrency(value);
     return String(value);
   };
 

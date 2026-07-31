@@ -3,6 +3,7 @@ import { signIn, resetPassword } from "../../services/auth.service";
 import { useToast } from "../../components/ui/Toast";
 import { ThemeToggle } from "../../components/ui/ThemeToggle";
 import styles from "./LoginV2.module.css";
+import { FirebaseError } from 'firebase/app';
 
 type Mode = 'signin' | 'reset';
 
@@ -16,7 +17,8 @@ export const Login = () => {
   const { showToast } = useToast();
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +32,7 @@ export const Login = () => {
         showToast('Email de redefinição enviado!', 'success');
         setMode('signin');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       const messages: Record<string, string> = {
         'auth/user-not-found': 'Usuário não encontrado.',
         'auth/wrong-password': 'Senha incorreta.',
@@ -38,7 +40,8 @@ export const Login = () => {
         'auth/invalid-email': 'Email inválido.',
         'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde.',
       };
-      showToast(messages[err.code] ?? 'Ocorreu um erro. Tente novamente.', 'error');
+      const code = err instanceof FirebaseError ? err.code : '';
+      showToast(messages[code] ?? 'Ocorreu um erro. Tente novamente.', 'error');
     } finally {
       setIsLoading(false);
     }

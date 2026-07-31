@@ -60,27 +60,28 @@ npm run build
 
 ### Firestore — regras de segurança
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+As regras estão versionadas em `firestore.rules`, com a configuração em
+`firebase.json`. Para publicá-las com o Firebase CLI:
+
+```bash
+firebase deploy --only firestore
 ```
 
-### Firestore — índices necessários
+### Firestore — índices
 
-Crie os seguintes índices compostos no console do Firebase:
+As consultas atuais usam apenas índices de campo único, criados automaticamente
+pelo Firestore. O arquivo `firestore.indexes.json` fica versionado para futuras
+consultas que exijam índices compostos.
 
-**Coleção:** `users/{userId}/transactions`
-- `monthKey` (ASC) + `date` (DESC)
-- `monthKey` (ASC) + `monthKey` (ASC) + `date` (ASC) — para queries de período
+## Qualidade
 
-**Coleção:** `users/{userId}/subcategories`
-- `categoryId` (ASC) + `name` (ASC)
+```bash
+npm run lint
+npm test
+npm run build
+```
+
+O deploy executa as três verificações antes de publicar a aplicação.
 
 ---
 
@@ -88,7 +89,7 @@ Crie os seguintes índices compostos no console do Firebase:
 
 ```
 src/
-├── config/          # Firebase, categorias fixas, constantes
+├── config/          # Firebase e constantes
 ├── services/        # Camada de acesso ao Firebase (CRUD)
 ├── store/           # Estado global (Zustand)
 ├── pages/           # Dashboard, Lançamentos, Relatórios, Login
@@ -98,6 +99,10 @@ src/
 └── styles/          # CSS global e variáveis
 ```
 
-## Adicionar categorias
+## Gerenciar categorias
 
-Edite `src/config/categories.ts` e adicione um novo objeto ao array `CATEGORIES`.
+As categorias pertencem ao usuário e ficam na coleção
+`users/{userId}/categories` do Firestore. Depois de entrar no aplicativo, use a
+tela **Categorias** para criar, editar ou excluir categorias. No primeiro login,
+o arquivo `public/default-categories.json` é importado automaticamente quando a
+coleção ainda está vazia.

@@ -18,7 +18,8 @@ import { db } from '../config/firebase';
 import { COLLECTIONS } from '../config/constants';
 import type { Transaction, TransactionFormData } from '../types';
 import { dateToMonthKey } from '../utils/date';
-import { getCategoryById } from '../config/categories';
+import { getCategoryById } from './category.service';
+import { parseCurrencyInput } from '../utils/currency';
 
 // Caminho da coleção escopada por usuário
 const txCollection = (userId: string) =>
@@ -67,11 +68,12 @@ export const createTransaction = async (
   userId: string,
   formData: TransactionFormData
 ): Promise<Transaction> => {
-  const category = getCategoryById(formData.categoryId);
+  const category = await getCategoryById(userId, formData.categoryId);
   if (!category) throw new Error(`Categoria inválida: ${formData.categoryId}`);
 
   const monthKey = dateToMonthKey(formData.date);
-  const amount = parseFloat(formData.amount.replace(',', '.'));
+  const amount = parseCurrencyInput(formData.amount);
+  if (amount <= 0) throw new Error('Valor inválido.');
 
   const data = {
     categoryId: formData.categoryId,
@@ -101,13 +103,19 @@ export const updateTransaction = async (
   const updates: Record<string, unknown> = {};
 
   if (formData.description) updates.description = formData.description.trim();
-  if (formData.amount) updates.amount = parseFloat(formData.amount.replace(',', '.'));
+  if (formData.amount !== undefined) {
+    const amount = parseCurrencyInput(formData.amount);
+    if (amount <= 0) throw new Error('Valor inválido.');
+    updates.amount = amount;
+  }
   if (formData.date) {
     updates.date = formData.date;
     updates.monthKey = dateToMonthKey(formData.date);
   }
   if (formData.observation !== undefined) updates.observation = formData.observation.trim();
-  if (formData.subcategoryId !== undefined) updates.subcategoryId = formData.subcategoryId;
+  if (formData.subcategoryId !== undefined) {
+    updates.subcategoryId = formData.subcategoryId || null;
+  }
 
   await updateDoc(docRef, updates);
 };

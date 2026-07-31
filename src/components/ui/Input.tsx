@@ -2,7 +2,7 @@
 // COMPONENTE: Input
 // ============================================================
 
-import React from 'react';
+import React, { useId } from 'react';
 import styles from './Input.module.css';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -21,7 +21,8 @@ export const Input: React.FC<InputProps> = ({
   className = '',
   ...rest
 }) => {
-  const inputId = id ?? `input-${Math.random().toString(36).slice(2, 7)}`;
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
 
   return (
     <div className={styles.wrapper}>

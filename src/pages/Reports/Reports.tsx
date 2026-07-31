@@ -8,7 +8,6 @@ import { useTransactionStore } from '../../store/transaction.store';
 import { getTransactionsByPeriod } from '../../services/transaction.service';
 import { buildCostCenterReport } from '../../utils/reports';
 import { exportReportToPDF, exportReportToXLSX } from '../../utils/export';
-import { formatCurrency } from '../../utils/currency';
 import { getCurrentMonthKey, addMonths } from '../../utils/date';
 import { Button } from '../../components/ui/Button';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
@@ -17,11 +16,15 @@ import { ReportCharts } from './components/ReportCharts';
 import { useToast } from '../../components/ui/Toast';
 import type { CostCenterReport } from '../../types';
 import styles from './Reports.module.css';
+import { usePrivacy } from '../../context/PrivacyContext';
+import { useCategoryStore } from '../../store/category.store';
 
 export const Reports: React.FC = () => {
   const { user } = useAuthStore();
-  const { subcategories } = useTransactionStore();
+  const { subcategories, loadingSubcategories } = useTransactionStore();
   const { showToast } = useToast();
+  const { hidden, privateCurrency } = usePrivacy();
+  const { categories, loading: loadingCategories } = useCategoryStore();
 
   const currentMonth = getCurrentMonthKey();
 
@@ -32,6 +35,10 @@ export const Reports: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!user) return;
+    if (loadingSubcategories || loadingCategories) {
+      showToast('Aguarde o carregamento das categorias.', 'info');
+      return;
+    }
     if (fromMonth > toMonth) {
       showToast('O mês inicial deve ser anterior ao mês final.', 'warning');
       return;
@@ -43,6 +50,7 @@ export const Reports: React.FC = () => {
       const generated = buildCostCenterReport(
         transactions,
         subcategories,
+        categories,
         fromMonth,
         toMonth
       );
@@ -57,6 +65,19 @@ export const Reports: React.FC = () => {
   const reportTitle = report
     ? `Relatório_${report.period.from}_a_${report.period.to}`
     : 'Relatório';
+
+  const handleExport = async (format: 'pdf' | 'xlsx') => {
+    if (!report) return;
+    try {
+      if (format === 'pdf') {
+        await exportReportToPDF(report, reportTitle);
+      } else {
+        await exportReportToXLSX(report, reportTitle);
+      }
+    } catch {
+      showToast('Erro ao exportar o relatório.', 'error');
+    }
+  };
 
   return (
     <div className={styles.page}>
@@ -85,7 +106,10 @@ export const Reports: React.FC = () => {
             onChange={(e) => setToMonth(e.target.value)}
           />
         </div>
-        <Button onClick={handleGenerate} loading={loading}>
+        <Button
+          onClick={handleGenerate}
+          loading={loading || loadingSubcategories || loadingCategories}
+        >
           Gerar
         </Button>
       </div>
@@ -103,13 +127,13 @@ export const Reports: React.FC = () => {
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Total Receitas</span>
               <span className={[styles.summaryValue, styles.income].join(' ')}>
-                {formatCurrency(report.totalIncome)}
+                {privateCurrency(report.totalIncome)}
               </span>
             </div>
             <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Total Gastos</span>
               <span className={[styles.summaryValue, styles.expense].join(' ')}>
-                {formatCurrency(report.totalExpense)}
+                {privateCurrency(report.totalExpense)}
               </span>
             </div>
             <div className={styles.summaryItem}>
@@ -120,7 +144,7 @@ export const Reports: React.FC = () => {
                   report.balance >= 0 ? styles.income : styles.expense,
                 ].join(' ')}
               >
-                {formatCurrency(report.balance)}
+                {privateCurrency(report.balance)}
               </span>
             </div>
           </div>
@@ -130,14 +154,18 @@ export const Reports: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => exportReportToPDF(report, reportTitle)}
+              onClick={() => void handleExport('pdf')}
+              disabled={hidden}
+              title={hidden ? 'Exiba os valores para exportar' : undefined}
             >
               📄 Exportar PDF
             </Button>
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => exportReportToXLSX(report, reportTitle)}
+              onClick={() => void handleExport('xlsx')}
+              disabled={hidden}
+              title={hidden ? 'Exiba os valores para exportar' : undefined}
             >
               📊 Exportar Excel
             </Button>

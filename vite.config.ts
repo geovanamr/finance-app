@@ -53,6 +53,13 @@ export default defineConfig({
       workbox: {
         // Cache de assets estáticos
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: [
+          '**/assets/xlsx-*.js',
+          '**/assets/pdf-*.js',
+          '**/assets/charts-*.js',
+          '**/assets/html2canvas-*.js',
+          '**/assets/purify.es-*.js',
+        ],
         // Estratégia: network first para dados, cache first para assets
         runtimeCaching: [
           {
@@ -61,6 +68,14 @@ export default defineConfig({
             options: {
               cacheName: 'firebase-cache',
               expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 },
+            },
+          },
+          {
+            urlPattern: /\/assets\/(xlsx|pdf|charts|html2canvas|purify\.es)-.*\.js$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'optional-features-cache',
+              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
         ],
@@ -76,14 +91,26 @@ export default defineConfig({
           if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router-dom')) {
             return 'vendor';
           }
+          if (id.includes('node_modules/@firebase/firestore')) {
+            return 'firebase-firestore';
+          }
+          if (id.includes('node_modules/@firebase/auth')) {
+            return 'firebase-auth';
+          }
+          if (id.includes('node_modules/@firebase')) {
+            return 'firebase-core';
+          }
           if (id.includes('node_modules/firebase')) {
-            return 'firebase';
+            return 'firebase-entry';
           }
           if (id.includes('node_modules/recharts')) {
             return 'charts';
           }
-          if (id.includes('node_modules/xlsx') || id.includes('node_modules/jspdf')) {
-            return 'export';
+          if (id.includes('node_modules/xlsx')) {
+            return 'xlsx';
+          }
+          if (id.includes('node_modules/jspdf')) {
+            return 'pdf';
           }
         },
       },

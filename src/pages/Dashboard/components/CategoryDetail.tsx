@@ -10,13 +10,13 @@ import { useTransactionStore } from '../../../store/transaction.store';
 import { useAuthStore } from '../../../store/auth.store';
 import { deleteTransaction } from '../../../services/transaction.service';
 import { deleteSubcategory } from '../../../services/subcategory.service';
-import { formatCurrency } from '../../../utils/currency';
 import { formatDate } from '../../../utils/date';
 import { useToast } from '../../../components/ui/Toast';
 import { TransactionModal } from './TransactionModal';
 import { SubcategoryModal } from './SubcategoryModal';
 import type { Category, Transaction, Subcategory } from '../../../types';
 import styles from './CategoryDetail.module.css';
+import { usePrivacy } from '../../../context/PrivacyContext';
 
 interface CategoryDetailProps {
   category: Category;
@@ -33,6 +33,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
     useTransactionStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const { privateCurrency } = usePrivacy();
 
   const [txModalOpen, setTxModalOpen] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
@@ -73,7 +74,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
 
   return (
     <>
-      <Modal open onClose={onClose} title={`${category.icon} ${category.name}`} size="lg">
+      <Modal open={!txModalOpen && !subModalOpen} onClose={onClose} title={`${category.icon} ${category.name}`} size="lg">
         {/* Total da categoria */}
         <div className={styles.totalBanner} style={{ borderColor: category.color }}>
           <span className={styles.totalLabel}>Total no mês</span>
@@ -81,7 +82,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
             className={styles.totalValue}
             style={{ color: category.type === 'income' ? 'var(--color-income)' : 'var(--color-expense)' }}
           >
-            {formatCurrency(total)}
+            {privateCurrency(total)}
           </span>
         </div>
 
@@ -104,7 +105,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                 return (
                   <div key={sub.id} className={styles.subItem}>
                     <span className={styles.subName}>{sub.name}</span>
-                    <span className={styles.subTotal}>{formatCurrency(subTotal)}</span>
+                    <span className={styles.subTotal}>{privateCurrency(subTotal)}</span>
                     <button
                       className={styles.deleteBtn}
                       onClick={() => handleDeleteSub(sub)}
@@ -156,7 +157,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                             : 'var(--color-expense)',
                       }}
                     >
-                      {formatCurrency(tx.amount)}
+                      {privateCurrency(tx.amount)}
                     </span>
                     <div className={styles.txActions}>
                       <button

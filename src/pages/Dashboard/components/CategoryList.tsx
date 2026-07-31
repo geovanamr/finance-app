@@ -3,12 +3,12 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { INCOME_CATEGORIES, EXPENSE_CATEGORIES } from '../../../config/categories';
 import { useTransactionStore } from '../../../store/transaction.store';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { CategoryDetail } from './CategoryDetail';
 import type { Category } from '../../../types';
 import styles from './CategoryList.module.css';
+import { useCategoryStore } from '../../../store/category.store';
 
 interface CategoryListProps {
   monthKey: string;
@@ -18,6 +18,9 @@ export const CategoryList: React.FC<CategoryListProps> = ({ monthKey }) => {
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const { transactions } = useTransactionStore();
   const { privateCurrency } = usePrivacy();
+  const categories = useCategoryStore((state) => state.categories);
+  const incomeCategories = categories.filter((category) => category.type === 'income');
+  const expenseCategories = categories.filter((category) => category.type === 'expense');
 
   const getTotalByCategory = (categoryId: string) =>
     transactions
@@ -64,8 +67,8 @@ export const CategoryList: React.FC<CategoryListProps> = ({ monthKey }) => {
   return (
     <>
       <div className={styles.wrapper}>
-        {renderSection('Receitas Mensais', INCOME_CATEGORIES, 'income')}
-        {renderSection('Gastos Mensais', EXPENSE_CATEGORIES, 'expense')}
+        {renderSection('Receitas Mensais', incomeCategories, 'income')}
+        {renderSection('Gastos Mensais', expenseCategories, 'expense')}
       </div>
 
       {selectedCategory && (

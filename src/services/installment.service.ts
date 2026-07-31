@@ -6,18 +6,23 @@
 
 import {
   collection,
-  addDoc,
   getDocs,
   query,
   orderBy,
-  deleteDoc,
   doc,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { COLLECTIONS } from '../config/constants';
 import type { InstallmentFormData, InstallmentPlan, Transaction } from '../types';
-import { getCategoryById } from '../config/categories';
+import { getCategoryById } from './category.service';
 import { toMonthKey } from '../utils/date';
+import { parseCurrencyInput, roundCurrency } from '../utils/currency';
+import {
+  calcFirstInstallmentDate,
+  distributeInstallmentAmounts,
+} from '../utils/installments';
 
 // Coleções escopadas por usuário
 const planCollection = (userId: string) =>
@@ -29,33 +34,25 @@ const txCollection = (userId: string) =>
 /**
  * Calcula a data da primeira parcela: dia 01 do mês seguinte à data da compra.
  */
-export const calcFirstInstallmentDate = (purchaseDate: string): string => {
-  const [year, month] = purchaseDate.split('-').map(Number);
-  const next = new Date(year, month, 1); // month sem -1 já avança um mês
-  const y = next.getFullYear();
-  const m = String(next.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}-01`;
-};
-
-/**
- * Cria o plano de parcelamento e gera todas as transações no Firestore.
- * Retorna o plano criado e as transações geradas.
- */
+/** Cria o plano e todas as transações em uma única operação atômica. */
 export const createInstallmentPlan = async (
   userId: string,
   formData: InstallmentFormData
 ): Promise<{ plan: InstallmentPlan; transactions: Transaction[] }> => {
-  const category = getCategoryById(formData.categoryId);
+  const category = await getCategoryById(userId, formData.categoryId);
   if (!category) throw new Error(`Categoria inválida: ${formData.categoryId}`);
 
-  const totalAmount = parseFloat(formData.totalAmount.replace(',', '.'));
-  const installmentAmount = parseFloat(formData.installmentAmount.replace(',', '.'));
-  const totalInstallments = parseInt(formData.totalInstallments, 10);
+  const totalAmount = parseCurrencyInput(formData.totalAmount);
+  const totalInstallments = Number(formData.totalInstallments);
   const firstInstallmentDate = calcFirstInstallmentDate(formData.purchaseDate);
 
   if (isNaN(totalAmount) || totalAmount <= 0) throw new Error('Valor total inválido.');
-  if (isNaN(installmentAmount) || installmentAmount <= 0) throw new Error('Valor da parcela inválido.');
-  if (isNaN(totalInstallments) || totalInstallments < 1) throw new Error('Número de parcelas inválido.');
+  if (!formData.description.trim()) throw new Error('Descrição obrigatória.');
+  if (!formData.purchaseDate) throw new Error('Data da compra obrigatória.');
+  if (!Number.isInteger(totalInstallments) || totalInstallments < 1) throw new Error('Número de parcelas inválido.');
+  if (totalInstallments > 360) throw new Error('O limite é de 360 parcelas.');
+  const installmentAmounts = distributeInstallmentAmounts(totalAmount, totalInstallments);
+  const installmentAmount = roundCurrency(installmentAmounts[0]);
 
   const now = new Date().toISOString();
 
@@ -74,8 +71,10 @@ export const createInstallmentPlan = async (
     createdAt: now,
   };
 
-  const planRef = await addDoc(planCollection(userId), planData);
+  const planRef = doc(planCollection(userId));
   const plan: InstallmentPlan = { id: planRef.id, ...planData };
+  const batch = writeBatch(db);
+  batch.set(planRef, planData);
 
   // Gera as transações de cada parcela
   const transactions: Transaction[] = [];
@@ -87,12 +86,13 @@ export const createInstallmentPlan = async (
     const dateStr = `${installDate.getFullYear()}-${String(installDate.getMonth() + 1).padStart(2, '0')}-01`;
     const monthKey = toMonthKey(installDate);
     const label = `${i + 1}/${totalInstallments} ${formData.description.trim()}`;
+    const currentInstallmentAmount = installmentAmounts[i];
 
     const txData = {
       categoryId: formData.categoryId,
       subcategoryId: formData.subcategoryId || null,
       description: label,
-      amount: installmentAmount,
+      amount: currentInstallmentAmount,
       date: dateStr,
       observation: formData.observation?.trim() ?? '',
       type: category.type,
@@ -103,9 +103,12 @@ export const createInstallmentPlan = async (
       totalInstallments,
     };
 
-    const txRef = await addDoc(txCollection(userId), txData);
+    const txRef = doc(txCollection(userId));
+    batch.set(txRef, txData);
     transactions.push({ id: txRef.id, ...txData } as Transaction);
   }
+
+  await batch.commit();
 
   return { plan, transactions };
 };
@@ -126,12 +129,13 @@ export const deleteInstallmentPlan = async (
   userId: string,
   planId: string
 ): Promise<void> => {
-  // Remove o plano
-  await deleteDoc(doc(db, 'users', userId, COLLECTIONS.INSTALLMENT_PLANS, planId));
-
-  // Remove todas as transações vinculadas ao plano
-  const txCol = txCollection(userId);
-  const snapshot = await getDocs(txCol);
-  const linked = snapshot.docs.filter((d) => d.data().installmentPlanId === planId);
-  await Promise.all(linked.map((d) => deleteDoc(d.ref)));
+  const linkedQuery = query(
+    txCollection(userId),
+    where('installmentPlanId', '==', planId)
+  );
+  const snapshot = await getDocs(linkedQuery);
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'users', userId, COLLECTIONS.INSTALLMENT_PLANS, planId));
+  snapshot.docs.forEach((linkedDoc) => batch.delete(linkedDoc.ref));
+  await batch.commit();
 };

@@ -2,8 +2,8 @@
 // UTILITÁRIOS DE GERAÇÃO DE RELATÓRIOS
 // ============================================================
 
-import type { Transaction, Subcategory, CostCenterItem, CostCenterReport } from '../types';
-import { CATEGORIES } from '../config/categories';
+import type { Category, Transaction, Subcategory, CostCenterItem, CostCenterReport } from '../types';
+import { roundCurrency } from './currency';
 
 /**
  * Gera o relatório de centro de custos a partir das transações e subcategorias.
@@ -12,6 +12,7 @@ import { CATEGORIES } from '../config/categories';
 export const buildCostCenterReport = (
   transactions: Transaction[],
   subcategories: Subcategory[],
+  categories: Category[],
   fromMonthKey: string,
   toMonthKey: string
 ): CostCenterReport => {
@@ -23,17 +24,19 @@ export const buildCostCenterReport = (
   const incomeItems = buildCostCenterItems(
     filtered.filter((tx) => tx.type === 'income'),
     subcategories,
+    categories,
     'income'
   );
 
   const expenseItems = buildCostCenterItems(
     filtered.filter((tx) => tx.type === 'expense'),
     subcategories,
+    categories,
     'expense'
   );
 
-  const totalIncome = incomeItems.reduce((sum, item) => sum + item.total, 0);
-  const totalExpense = expenseItems.reduce((sum, item) => sum + item.total, 0);
+  const totalIncome = roundCurrency(incomeItems.reduce((sum, item) => sum + item.total, 0));
+  const totalExpense = roundCurrency(expenseItems.reduce((sum, item) => sum + item.total, 0));
 
   return {
     period: { from: fromMonthKey, to: toMonthKey },
@@ -41,7 +44,7 @@ export const buildCostCenterReport = (
     expense: expenseItems,
     totalIncome,
     totalExpense,
-    balance: totalIncome - totalExpense,
+    balance: roundCurrency(totalIncome - totalExpense),
   };
 };
 
@@ -52,9 +55,10 @@ export const buildCostCenterReport = (
 const buildCostCenterItems = (
   transactions: Transaction[],
   subcategories: Subcategory[],
+  allCategories: Category[],
   type: 'income' | 'expense'
 ): CostCenterItem[] => {
-  const categories = CATEGORIES.filter((c) => c.type === type);
+  const categories = allCategories.filter((category) => category.type === type);
   const result: CostCenterItem[] = [];
   let categoryIndex = 0;
 
@@ -66,7 +70,14 @@ const buildCostCenterItems = (
     const categoryCode = String(categoryIndex);
 
     // Transações diretas na categoria (sem subcategoria)
-    const directTxs = categoryTxs.filter((tx) => !tx.subcategoryId);
+    const knownSubcategoryIds = new Set(
+      subcategories
+        .filter((sub) => sub.categoryId === category.id)
+        .map((sub) => sub.id)
+    );
+    const directTxs = categoryTxs.filter(
+      (tx) => !tx.subcategoryId || !knownSubcategoryIds.has(tx.subcategoryId)
+    );
 
     // Subcategorias desta categoria que têm transações
     const categorySubs = subcategories.filter((sub) => sub.categoryId === category.id);
@@ -82,7 +93,7 @@ const buildCostCenterItems = (
         level: 2,
         code: `${categoryCode}.${subIndex}`,
         name: sub.name,
-        total: subTxs.reduce((sum, tx) => sum + tx.amount, 0),
+        total: roundCurrency(subTxs.reduce((sum, tx) => sum + tx.amount, 0)),
         transactions: subTxs,
       });
     });
@@ -93,13 +104,15 @@ const buildCostCenterItems = (
       children.push({
         level: 2,
         code: `${categoryCode}.${subIndex}`,
-        name: 'Geral',
-        total: directTxs.reduce((sum, tx) => sum + tx.amount, 0),
+        name: directTxs.some((tx) => tx.subcategoryId)
+          ? 'Geral / subcategoria removida'
+          : 'Geral',
+        total: roundCurrency(directTxs.reduce((sum, tx) => sum + tx.amount, 0)),
         transactions: directTxs,
       });
     }
 
-    const categoryTotal = categoryTxs.reduce((sum, tx) => sum + tx.amount, 0);
+    const categoryTotal = roundCurrency(categoryTxs.reduce((sum, tx) => sum + tx.amount, 0));
 
     result.push({
       level: 1,
@@ -123,5 +136,5 @@ export const calcSavingsProgress = (
   goal: number
 ): number => {
   if (goal <= 0) return 0;
-  return Math.min(Math.round((balance / goal) * 100), 100);
+  return Math.max(0, Math.min(Math.round((balance / goal) * 100), 100));
 };

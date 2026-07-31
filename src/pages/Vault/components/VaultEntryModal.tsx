@@ -12,6 +12,8 @@ import { createVaultEntry } from '../../../services/vault.service';
 import { useToast } from '../../../components/ui/Toast';
 import type { VaultEntryType } from '../../../types';
 import styles from './VaultEntryModal.module.css';
+import { getLocalISODate } from '../../../utils/date';
+import { parseCurrencyInput } from '../../../utils/currency';
 
 interface VaultEntryModalProps {
   open: boolean;
@@ -30,7 +32,7 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getLocalISODate());
   const [observation, setObservation] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -41,7 +43,7 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   const validate = () => {
     const e: Record<string, string> = {};
     if (!description.trim()) e.description = 'Descrição obrigatória.';
-    if (!amount || parseFloat(amount.replace(',', '.')) <= 0)
+    if (!amount || parseCurrencyInput(amount) <= 0)
       e.amount = 'Valor deve ser maior que zero.';
     if (!date) e.date = 'Data obrigatória.';
     setErrors(e);

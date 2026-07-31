@@ -5,17 +5,19 @@
 
 import {
   collection,
-  addDoc,
   updateDoc,
   doc,
   query,
   where,
   getDocs,
   limit,
+  getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { COLLECTIONS } from '../config/constants';
 import type { SavingsGoal, SavingsGoalFormData } from '../types';
+import { parseCurrencyInput } from '../utils/currency';
 
 const goalCollection = (userId: string) =>
   collection(db, 'users', userId, COLLECTIONS.SAVINGS_GOALS);
@@ -28,6 +30,12 @@ export const getSavingsGoalByMonth = async (
   userId: string,
   monthKey: string
 ): Promise<SavingsGoal | null> => {
+  const canonicalRef = doc(db, 'users', userId, COLLECTIONS.SAVINGS_GOALS, monthKey);
+  const canonical = await getDoc(canonicalRef);
+  if (canonical.exists()) {
+    return { id: canonical.id, ...canonical.data() } as SavingsGoal;
+  }
+
   const q = query(
     goalCollection(userId),
     where('monthKey', '==', monthKey),
@@ -47,7 +55,8 @@ export const upsertSavingsGoal = async (
   userId: string,
   formData: SavingsGoalFormData
 ): Promise<SavingsGoal> => {
-  const amount = parseFloat(formData.amount.replace(',', '.'));
+  const amount = parseCurrencyInput(formData.amount);
+  if (amount <= 0) throw new Error('Valor inválido.');
   const existing = await getSavingsGoalByMonth(userId, formData.monthKey);
 
   if (existing) {
@@ -57,6 +66,7 @@ export const upsertSavingsGoal = async (
   }
 
   const data = { monthKey: formData.monthKey, amount };
-  const docRef = await addDoc(goalCollection(userId), data);
+  const docRef = doc(db, 'users', userId, COLLECTIONS.SAVINGS_GOALS, formData.monthKey);
+  await setDoc(docRef, data);
   return { id: docRef.id, ...data };
 };

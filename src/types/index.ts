@@ -14,6 +14,15 @@ export interface Category {
   type: TransactionType;
   icon: string;
   color: string;
+  order: number;
+  createdAt: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  type: TransactionType;
+  icon: string;
+  color: string;
 }
 
 // --- Subcategorias ---
@@ -52,7 +61,7 @@ export interface InstallmentPlan {
   subcategoryId?: string;
   description: string;       // ex: "Celular"
   totalAmount: number;       // valor total da compra
-  installmentAmount: number; // valor de cada parcela (pode ser editado)
+  installmentAmount: number; // valor nominal; diferenças de centavos são distribuídas
   totalInstallments: number; // quantidade de parcelas
   purchaseDate: string;      // data da compra (YYYY-MM-DD)
   firstInstallmentDate: string; // sempre dia 01 do mês seguinte à compra
@@ -66,7 +75,7 @@ export interface InstallmentFormData {
   subcategoryId?: string;
   description: string;
   totalAmount: string;       // string para input, convertido antes de salvar
-  installmentAmount: string; // editável pelo usuário
+  installmentAmount: string; // calculado automaticamente para exibição
   totalInstallments: string; // número de parcelas
   purchaseDate: string;      // data da compra
   observation?: string;

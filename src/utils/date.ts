@@ -12,6 +12,19 @@ export const getCurrentMonthKey = (): string => {
   return toMonthKey(now);
 };
 
+/** Retorna a data local atual em YYYY-MM-DD, sem conversão para UTC. */
+export const getLocalISODate = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+/** Usa hoje no mês atual e o primeiro dia quando outro mês está selecionado. */
+export const getDefaultDateForMonth = (monthKey: string): string =>
+  monthKey === getCurrentMonthKey() ? getLocalISODate() : `${monthKey}-01`;
+
 /**
  * Converte uma Date para monthKey "YYYY-MM".
  */

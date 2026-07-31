@@ -37,6 +37,7 @@ interface UIState {
   installmentModal: boolean;
   openInstallmentModal: () => void;
   closeInstallmentModal: () => void;
+  reset: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -62,4 +63,13 @@ export const useUIStore = create<UIState>((set) => ({
   installmentModal: false,
   openInstallmentModal: () => set({ installmentModal: true }),
   closeInstallmentModal: () => set({ installmentModal: false }),
+
+  reset: () =>
+    set({
+      selectedMonthKey: getCurrentMonthKey(),
+      transactionModal: { open: false, categoryId: null, editingId: null },
+      subcategoryModal: { open: false, categoryId: null },
+      savingsGoalModal: false,
+      installmentModal: false,
+    }),
 }));

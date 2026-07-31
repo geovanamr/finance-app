@@ -2,7 +2,7 @@
 // COMPONENTE: SavingsGoalModal — definir meta de economia do mês
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
@@ -12,6 +12,7 @@ import { upsertSavingsGoal } from '../../../services/savingsGoal.service';
 import { useToast } from '../../../components/ui/Toast';
 import { formatMonthLabel } from '../../../utils/date';
 import styles from './SavingsGoalModal.module.css';
+import { parseCurrencyInput } from '../../../utils/currency';
 
 interface SavingsGoalModalProps {
   open: boolean;
@@ -28,23 +29,18 @@ export const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(
+    currentGoal ? currentGoal.amount.toFixed(2).replace('.', ',') : ''
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (open) {
-      setAmount(currentGoal ? currentGoal.amount.toFixed(2).replace('.', ',') : '');
-      setError('');
-    }
-  }, [open, currentGoal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    const parsed = parseFloat(amount.replace(',', '.'));
-    if (!amount || isNaN(parsed) || parsed <= 0) {
+    const parsed = parseCurrencyInput(amount);
+    if (!amount || parsed <= 0) {
       setError('Informe um valor válido.');
       return;
     }

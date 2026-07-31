@@ -2,9 +2,6 @@
 // UTILITÁRIOS DE EXPORTAÇÃO (PDF e XLSX)
 // ============================================================
 
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import type { CostCenterReport, CostCenterItem } from '../types';
 import { formatCurrency } from './currency';
 import { formatDate } from './date';
@@ -14,7 +11,18 @@ import { formatDate } from './date';
 /**
  * Exporta o relatório de centro de custos como PDF.
  */
-export const exportReportToPDF = (report: CostCenterReport, title: string): void => {
+interface AutoTableDocument {
+  lastAutoTable: { finalY: number };
+}
+
+export const exportReportToPDF = async (
+  report: CostCenterReport,
+  title: string
+): Promise<void> => {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc = new jsPDF();
 
   // Cabeçalho
@@ -46,7 +54,7 @@ export const exportReportToPDF = (report: CostCenterReport, title: string): void
     columnStyles: { 1: { halign: 'right' } },
   });
 
-  yPos = (doc as any).lastAutoTable.finalY + 10;
+  yPos = (doc as unknown as AutoTableDocument).lastAutoTable.finalY + 10;
 
   // Receitas
   const incomeRows = flattenCostCenterItems(report.income);
@@ -69,7 +77,7 @@ export const exportReportToPDF = (report: CostCenterReport, title: string): void
       columnStyles: { 2: { halign: 'right' } },
     });
 
-    yPos = (doc as any).lastAutoTable.finalY + 10;
+    yPos = (doc as unknown as AutoTableDocument).lastAutoTable.finalY + 10;
   }
 
   // Gastos
@@ -102,7 +110,11 @@ export const exportReportToPDF = (report: CostCenterReport, title: string): void
 /**
  * Exporta o relatório de centro de custos como XLSX.
  */
-export const exportReportToXLSX = (report: CostCenterReport, title: string): void => {
+export const exportReportToXLSX = async (
+  report: CostCenterReport,
+  title: string
+): Promise<void> => {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   // Aba de resumo
