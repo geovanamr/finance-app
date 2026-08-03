@@ -8,12 +8,17 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { useVaultStore } from '../../../store/vault.store';
 import { useAuthStore } from '../../../store/auth.store';
-import { createVaultEntry } from '../../../services/vault.service';
+import {
+  createVaultEntry,
+  createVaultWithdrawalWithExpense,
+} from '../../../services/vault.service';
 import { useToast } from '../../../components/ui/Toast';
 import type { VaultEntryType } from '../../../types';
 import styles from './VaultEntryModal.module.css';
 import { getLocalISODate } from '../../../utils/date';
 import { parseCurrencyInput } from '../../../utils/currency';
+import { useCategoryStore } from '../../../store/category.store';
+import { useTransactionStore } from '../../../store/transaction.store';
 
 interface VaultEntryModalProps {
   open: boolean;
@@ -27,6 +32,9 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   type,
 }) => {
   const { addEntry, balance } = useVaultStore();
+  const addTransaction = useTransactionStore((state) => state.addTransaction);
+  const subcategories = useTransactionStore((state) => state.subcategories);
+  const categories = useCategoryStore((state) => state.categories);
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
@@ -34,11 +42,18 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(getLocalISODate());
   const [observation, setObservation] = useState('');
+  const [destination, setDestination] = useState<'expense' | 'unassigned'>('expense');
+  const [categoryId, setCategoryId] = useState('');
+  const [subcategoryId, setSubcategoryId] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isDeposit = type === 'deposit';
   const title = isDeposit ? '⬇️ Depositar no Cofre' : '⬆️ Retirar do Cofre';
+  const expenseCategories = categories.filter((category) => category.type === 'expense');
+  const categorySubcategories = subcategories.filter(
+    (subcategory) => subcategory.categoryId === categoryId
+  );
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -49,6 +64,8 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
     else if (!isDeposit && parsedAmount > balance)
       e.amount = 'O valor da retirada é maior que o saldo do Cofre.';
     if (!date) e.date = 'Data obrigatória.';
+    if (!isDeposit && destination === 'expense' && !categoryId)
+      e.categoryId = 'Selecione a categoria do gasto.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -58,15 +75,29 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
     if (!user || !validate()) return;
     setLoading(true);
     try {
-      const entry = await createVaultEntry(user.uid, {
-        type,
-        amount,
-        date,
-        description,
-        observation,
-      });
-      addEntry(entry);
-      showToast(isDeposit ? 'Depósito registrado!' : 'Retirada registrada!', 'success');
+      if (!isDeposit && destination === 'expense') {
+        const result = await createVaultWithdrawalWithExpense(user.uid, {
+          categoryId,
+          subcategoryId,
+          amount,
+          date,
+          description,
+          observation,
+        });
+        addEntry(result.entry);
+        addTransaction(result.transaction);
+        showToast('Retirada e gasto registrados!', 'success');
+      } else {
+        const entry = await createVaultEntry(user.uid, {
+          type,
+          amount,
+          date,
+          description,
+          observation,
+        });
+        addEntry(entry);
+        showToast(isDeposit ? 'Depósito registrado!' : 'Retirada registrada!', 'success');
+      }
       onClose();
     } catch {
       showToast('Erro ao registrar movimentação.', 'error');
@@ -76,8 +107,85 @@ export const VaultEntryModal: React.FC<VaultEntryModalProps> = ({
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={title} size="sm">
+    <Modal open={open} onClose={onClose} title={title} size={isDeposit ? 'sm' : 'md'}>
       <form onSubmit={handleSubmit} className={styles.form} noValidate>
+        {!isDeposit && (
+          <fieldset className={styles.destinationGroup}>
+            <legend className={styles.label}>O que será feito com o dinheiro?</legend>
+            <label className={styles.destinationOption}>
+              <input
+                type="radio"
+                name="destination"
+                value="expense"
+                checked={destination === 'expense'}
+                onChange={() => setDestination('expense')}
+              />
+              <span>
+                <strong>Pagar uma despesa</strong>
+                <small>Cria também um gasto marcado como pago com o Cofre.</small>
+              </span>
+            </label>
+            <label className={styles.destinationOption}>
+              <input
+                type="radio"
+                name="destination"
+                value="unassigned"
+                checked={destination === 'unassigned'}
+                onChange={() => {
+                  setDestination('unassigned');
+                  setErrors((current) => ({ ...current, categoryId: '' }));
+                }}
+              />
+              <span>
+                <strong>Apenas retirar do Cofre</strong>
+                <small>Não cria uma receita nem um gasto mensal.</small>
+              </span>
+            </label>
+          </fieldset>
+        )}
+
+        {!isDeposit && destination === 'expense' && (
+          <div className={styles.expenseFields}>
+            <div className={styles.field}>
+              <label className={styles.label}>Categoria do gasto *</label>
+              <select
+                className={styles.select}
+                value={categoryId}
+                onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  setSubcategoryId('');
+                  setErrors((current) => ({ ...current, categoryId: '' }));
+                }}
+              >
+                <option value="">Selecione...</option>
+                {expenseCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.icon} {category.name}
+                  </option>
+                ))}
+              </select>
+              {errors.categoryId && <span className={styles.error}>{errors.categoryId}</span>}
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label}>Subcategoria</label>
+              <select
+                className={styles.select}
+                value={subcategoryId}
+                onChange={(event) => setSubcategoryId(event.target.value)}
+                disabled={!categoryId}
+              >
+                <option value="">— Nenhuma —</option>
+                {categorySubcategories.map((subcategory) => (
+                  <option key={subcategory.id} value={subcategory.id}>
+                    {subcategory.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
         <Input
           label="Descrição *"
           value={description}

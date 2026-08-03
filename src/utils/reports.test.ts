@@ -57,6 +57,22 @@ describe('buildCostCenterReport', () => {
 
     expect(report.expense[0].children?.[0]).toMatchObject({ name: 'Mercado', total: 25.5 });
   });
+
+  it('separa os gastos pagos com o Cofre sem removê-los do total', () => {
+    const report = buildCostCenterReport(
+      [
+        transaction({ id: 'vault', amount: 80, paymentSource: 'vault' }),
+        transaction({ id: 'month', amount: 20 }),
+      ],
+      [],
+      categories,
+      '2026-07',
+      '2026-07'
+    );
+
+    expect(report.totalExpense).toBe(100);
+    expect(report.totalVaultExpense).toBe(80);
+  });
 });
 
 describe('calcSavingsProgress', () => {

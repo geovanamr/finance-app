@@ -14,6 +14,7 @@ interface VaultState {
   setEntries: (entries: VaultEntry[]) => void;
   setLoading: (loading: boolean) => void;
   addEntry: (entry: VaultEntry) => void;
+  updateEntry: (id: string, data: Partial<VaultEntry>) => void;
   removeEntry: (id: string) => void;
   reset: () => void;
 }
@@ -30,6 +31,13 @@ export const useVaultStore = create<VaultState>((set, get) => ({
 
   addEntry: (entry) => {
     const entries = [entry, ...get().entries];
+    set({ entries, balance: calcVaultBalance(entries) });
+  },
+
+  updateEntry: (id, data) => {
+    const entries = get().entries.map((entry) =>
+      entry.id === id ? { ...entry, ...data } : entry
+    );
     set({ entries, balance: calcVaultBalance(entries) });
   },
 

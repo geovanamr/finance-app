@@ -75,6 +75,9 @@ export const Transactions: React.FC = () => {
                   {' · '}
                   {formatDate(tx.date)}
                 </span>
+                {tx.paymentSource === 'vault' && (
+                  <span className={styles.vaultBadge}>🏦 Pago com o Cofre</span>
+                )}
                 {tx.observation && (
                   <span className={styles.txObs}>{tx.observation}</span>
                 )}

@@ -51,6 +51,8 @@ export interface Transaction {
   installmentPlanId?: string; // ID do plano pai
   installmentNumber?: number; // número da parcela (1-based)
   totalInstallments?: number; // total de parcelas do plano
+  paymentSource?: 'vault'; // origem do pagamento quando criado pelo Cofre
+  vaultEntryId?: string; // retirada vinculada no Cofre
 }
 
 // --- Plano de parcelamento ---
@@ -112,6 +114,8 @@ export interface VaultEntry {
   description: string;
   observation?: string;
   createdAt: string;
+  destination?: 'unassigned' | 'expense';
+  linkedTransactionId?: string;
 }
 
 export interface VaultEntryFormData {
@@ -142,6 +146,7 @@ export interface CostCenterReport {
   expense: CostCenterItem[];
   totalIncome: number;
   totalExpense: number;
+  totalVaultExpense: number;
   balance: number;
 }
 

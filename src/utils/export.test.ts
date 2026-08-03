@@ -49,6 +49,7 @@ const report: CostCenterReport = {
   }],
   totalIncome: 0,
   totalExpense: transaction.amount,
+  totalVaultExpense: 0,
   balance: -transaction.amount,
 };
 
@@ -59,6 +60,7 @@ describe('buildTransactionExportRows', () => {
     expect(rows[0]).toEqual([
       '10/07/2026',
       'Gasto',
+      'Saldo do mês',
       'Alimentação',
       'Mercado',
       'Compra do mês',
@@ -70,7 +72,19 @@ describe('buildTransactionExportRows', () => {
   it('identifica referências removidas sem expor IDs internos', () => {
     const rows = buildTransactionExportRows(report, [], []);
 
-    expect(rows[0]?.[2]).toBe('Categoria removida');
-    expect(rows[0]?.[3]).toBe('Subcategoria removida');
+    expect(rows[0]?.[3]).toBe('Categoria removida');
+    expect(rows[0]?.[4]).toBe('Subcategoria removida');
+  });
+
+  it('identifica a origem Cofre nas transações detalhadas', () => {
+    const vaultReport: CostCenterReport = {
+      ...report,
+      expense: [{ ...report.expense[0], transactions: [{ ...transaction, paymentSource: 'vault' }] }],
+      totalVaultExpense: transaction.amount,
+    };
+
+    const rows = buildTransactionExportRows(vaultReport, [category], [subcategory]);
+
+    expect(rows[0]?.[2]).toBe('Cofre');
   });
 });

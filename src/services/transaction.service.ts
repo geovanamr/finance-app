@@ -13,6 +13,8 @@ import {
   query,
   where,
   getDocs,
+  deleteField,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { COLLECTIONS } from '../config/constants';
@@ -129,4 +131,44 @@ export const deleteTransaction = async (
 ): Promise<void> => {
   const docRef = doc(db, 'users', userId, COLLECTIONS.TRANSACTIONS, transactionId);
   await deleteDoc(docRef);
+};
+
+/**
+ * Exclui um gasto criado pelo Cofre e decide se a retirada também será
+ * removida. Quando ela é mantida, vira uma retirada comum sem destino.
+ */
+export const deleteVaultLinkedTransaction = async (
+  userId: string,
+  transaction: Transaction,
+  deleteLinkedVaultEntry: boolean
+): Promise<void> => {
+  const transactionRef = doc(
+    db,
+    'users',
+    userId,
+    COLLECTIONS.TRANSACTIONS,
+    transaction.id
+  );
+  const batch = writeBatch(db);
+  batch.delete(transactionRef);
+
+  if (transaction.vaultEntryId) {
+    const vaultRef = doc(
+      db,
+      'users',
+      userId,
+      COLLECTIONS.VAULT,
+      transaction.vaultEntryId
+    );
+    if (deleteLinkedVaultEntry) {
+      batch.delete(vaultRef);
+    } else {
+      batch.update(vaultRef, {
+        linkedTransactionId: deleteField(),
+        destination: 'unassigned',
+      });
+    }
+  }
+
+  await batch.commit();
 };

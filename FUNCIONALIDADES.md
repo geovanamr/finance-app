@@ -96,6 +96,10 @@ O painel reúne os dados do mês selecionado:
 - A categoria define se o lançamento é receita ou despesa.
 - A inclusão, edição e exclusão são feitas dentro do detalhe de uma categoria
   no painel.
+- Gastos criados a partir de uma retirada do Cofre recebem a identificação
+  **Pago com o Cofre** e permanecem vinculados à movimentação original.
+- Ao editar um gasto pago com o Cofre, valor, descrição, data e observação da
+  retirada são atualizados na mesma operação.
 - Alterar a data para outro mês remove o lançamento da visão mensal atual e o
   faz aparecer no novo mês.
 - A página **Lançamentos** consolida todas as receitas e despesas do mês, mas é
@@ -121,11 +125,23 @@ O painel reúne os dados do mês selecionado:
 - O Cofre é um controle separado das receitas e despesas mensais.
 - **Depósito:** aumenta o saldo do Cofre.
 - **Retirada:** reduz o saldo do Cofre.
+- Ao retirar, o usuário escolhe entre **Pagar uma despesa** e **Apenas retirar
+  do Cofre**.
+- Em **Pagar uma despesa**, categoria e subcategoria são informadas e o
+  sistema cria o gasto mensal e a retirada em uma única gravação atômica.
+- Em **Apenas retirar**, nenhuma receita ou despesa mensal é criada.
 - O saldo é a soma dos depósitos menos a soma das retiradas.
 - A interface impede uma retirada maior que o saldo apresentado.
 - Cada movimentação guarda descrição, valor, data e observação.
-- Movimentações podem ser criadas ou excluídas; ainda não podem ser editadas.
+- Movimentações podem ser criadas ou excluídas; retiradas vinculadas são
+  atualizadas ao editar o gasto correspondente.
+- Ao excluir uma retirada vinculada, o usuário decide se o gasto também será
+  excluído. Se mantido, ele se torna um gasto comum.
+- Ao excluir um gasto vinculado, o usuário decide se a retirada também será
+  removida, devolvendo o valor ao saldo do Cofre. Se mantida, ela se torna uma
+  retirada comum.
 - Depositar ou retirar não cria automaticamente um lançamento mensal.
+  A exceção é quando o destino **Pagar uma despesa** é escolhido.
 
 ## 11. Relatórios
 
@@ -133,13 +149,15 @@ O painel reúne os dados do mês selecionado:
 - O aplicativo busca todas as transações do período e monta um centro de
   custos hierárquico: categoria e subcategoria.
 - Exibe totais de receitas, gastos e saldo.
+- Mostra separadamente quanto dos gastos foi pago com o Cofre, sem retirar
+  esse valor do total de gastos.
 - Exibe gráfico de barras do resumo e gráfico de gastos por categoria.
 - Categorias sem movimentação no período não aparecem.
 - Lançamentos de uma subcategoria excluída continuam contabilizados.
 - **PDF:** exporta resumo e centro de custos.
 - **Excel:** exporta resumo, receitas, gastos e transações detalhadas. As
   transações usam os nomes de categoria e subcategoria, não os identificadores
-  internos do banco.
+  internos do banco, e informam se a origem foi o Cofre ou o saldo do mês.
 
 ## 12. Estado e mensagens
 
@@ -180,9 +198,7 @@ diretamente pelo usuário.
 
 - Criar uma tela de gerenciamento de parcelamentos, com consulta e exclusão do
   plano completo.
-- Permitir editar movimentações do Cofre.
-- Oferecer, de forma opcional, a criação automática de um lançamento mensal ao
-  depositar ou retirar do Cofre.
+- Permitir editar diretamente as movimentações comuns do Cofre.
 - Adicionar filtros e ações de edição diretamente na página Lançamentos.
 - Adicionar Firebase App Check para reduzir chamadas feitas por clientes não
   autorizados.

@@ -137,6 +137,12 @@ export const Reports: React.FC = () => {
               </span>
             </div>
             <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Pago com o Cofre</span>
+              <span className={[styles.summaryValue, styles.vault].join(' ')}>
+                {privateCurrency(report.totalVaultExpense)}
+              </span>
+            </div>
+            <div className={styles.summaryItem}>
               <span className={styles.summaryLabel}>Saldo</span>
               <span
                 className={[

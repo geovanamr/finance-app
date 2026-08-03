@@ -37,6 +37,11 @@ export const buildCostCenterReport = (
 
   const totalIncome = roundCurrency(incomeItems.reduce((sum, item) => sum + item.total, 0));
   const totalExpense = roundCurrency(expenseItems.reduce((sum, item) => sum + item.total, 0));
+  const totalVaultExpense = roundCurrency(
+    filtered
+      .filter((tx) => tx.type === 'expense' && tx.paymentSource === 'vault')
+      .reduce((sum, tx) => sum + tx.amount, 0)
+  );
 
   return {
     period: { from: fromMonthKey, to: toMonthKey },
@@ -44,6 +49,7 @@ export const buildCostCenterReport = (
     expense: expenseItems,
     totalIncome,
     totalExpense,
+    totalVaultExpense,
     balance: roundCurrency(totalIncome - totalExpense),
   };
 };

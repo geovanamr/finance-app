@@ -13,8 +13,9 @@ import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { useToast } from '../../components/ui/Toast';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { VaultEntryModal } from './components/VaultEntryModal';
-import type { VaultEntryType } from '../../types';
+import type { VaultEntry, VaultEntryType } from '../../types';
 import styles from './Vault.module.css';
+import { useTransactionStore } from '../../store/transaction.store';
 
 // Ícone SVG do cofre
 const VaultIcon = () => (
@@ -45,19 +46,44 @@ const WithdrawIcon = () => (
 
 export const Vault: React.FC = () => {
   const { entries, balance, loading, removeEntry } = useVaultStore();
+  const removeTransaction = useTransactionStore((state) => state.removeTransaction);
+  const updateTransaction = useTransactionStore((state) => state.updateTransaction);
   const { user } = useAuthStore();
   const { showToast } = useToast();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<VaultEntryType>('deposit');
 
-  const handleDelete = async (id: string, description: string) => {
+  const handleDelete = async (entry: VaultEntry) => {
     if (!user) return;
-    if (!confirm(`Excluir "${description}"?`)) return;
+    if (!confirm(`Excluir "${entry.description}"?`)) return;
+
+    let deleteLinkedTransaction = false;
+    if (entry.linkedTransactionId) {
+      deleteLinkedTransaction = confirm(
+        'Esta retirada criou um gasto mensal.\n\n' +
+        'OK: excluir também o gasto.\n' +
+        'Cancelar: manter o gasto sem vínculo com o Cofre.'
+      );
+    }
+
     try {
-      await deleteVaultEntry(user.uid, id);
-      removeEntry(id);
-      showToast('Movimentação excluída.', 'success');
+      await deleteVaultEntry(user.uid, entry, deleteLinkedTransaction);
+      removeEntry(entry.id);
+      if (entry.linkedTransactionId) {
+        if (deleteLinkedTransaction) {
+          removeTransaction(entry.linkedTransactionId);
+        } else {
+          updateTransaction(entry.linkedTransactionId, {
+            paymentSource: undefined,
+            vaultEntryId: undefined,
+          });
+        }
+      }
+      showToast(
+        deleteLinkedTransaction ? 'Retirada e gasto excluídos.' : 'Movimentação excluída.',
+        'success'
+      );
     } catch {
       showToast('Erro ao excluir.', 'error');
     }
@@ -128,6 +154,7 @@ export const Vault: React.FC = () => {
                   <span className={styles.entryDesc}>{entry.description}</span>
                   <span className={styles.entryMeta}>
                     {entry.type === 'deposit' ? 'Depósito' : 'Retirada'} · {formatDate(entry.date)}
+                    {entry.linkedTransactionId ? ' · Gasto registrado' : ''}
                   </span>
                   {entry.observation && (
                     <span className={styles.entryObs}>{entry.observation}</span>
@@ -143,7 +170,7 @@ export const Vault: React.FC = () => {
                   </span>
                   <button
                     className={styles.deleteBtn}
-                    onClick={() => handleDelete(entry.id, entry.description)}
+                    onClick={() => handleDelete(entry)}
                     aria-label="Excluir"
                   >
                     🗑️

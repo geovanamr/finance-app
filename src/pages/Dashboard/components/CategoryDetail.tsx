@@ -8,7 +8,10 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { useTransactionStore } from '../../../store/transaction.store';
 import { useAuthStore } from '../../../store/auth.store';
-import { deleteTransaction } from '../../../services/transaction.service';
+import {
+  deleteTransaction,
+  deleteVaultLinkedTransaction,
+} from '../../../services/transaction.service';
 import { deleteSubcategory } from '../../../services/subcategory.service';
 import { formatDate } from '../../../utils/date';
 import { useToast } from '../../../components/ui/Toast';
@@ -17,6 +20,7 @@ import { SubcategoryModal } from './SubcategoryModal';
 import type { Category, Transaction, Subcategory } from '../../../types';
 import styles from './CategoryDetail.module.css';
 import { usePrivacy } from '../../../context/PrivacyContext';
+import { useVaultStore } from '../../../store/vault.store';
 
 interface CategoryDetailProps {
   category: Category;
@@ -34,6 +38,8 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { privateCurrency } = usePrivacy();
+  const removeVaultEntry = useVaultStore((state) => state.removeEntry);
+  const updateVaultEntry = useVaultStore((state) => state.updateEntry);
 
   const [txModalOpen, setTxModalOpen] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
@@ -49,10 +55,35 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   const handleDeleteTx = async (tx: Transaction) => {
     if (!user) return;
     if (!confirm(`Excluir "${tx.description}"?`)) return;
+
+    let deleteLinkedVaultEntry = false;
+    if (tx.vaultEntryId) {
+      deleteLinkedVaultEntry = confirm(
+        'Este gasto foi pago com o Cofre.\n\n' +
+        'OK: excluir também a retirada e devolver o valor ao Cofre.\n' +
+        'Cancelar: manter a retirada sem um gasto vinculado.'
+      );
+    }
+
     try {
-      await deleteTransaction(user.uid, tx.id);
+      if (tx.vaultEntryId) {
+        await deleteVaultLinkedTransaction(user.uid, tx, deleteLinkedVaultEntry);
+        if (deleteLinkedVaultEntry) {
+          removeVaultEntry(tx.vaultEntryId);
+        } else {
+          updateVaultEntry(tx.vaultEntryId, {
+            destination: 'unassigned',
+            linkedTransactionId: undefined,
+          });
+        }
+      } else {
+        await deleteTransaction(user.uid, tx.id);
+      }
       removeTransaction(tx.id);
-      showToast('Transação excluída.', 'success');
+      showToast(
+        deleteLinkedVaultEntry ? 'Gasto excluído e valor devolvido ao Cofre.' : 'Transação excluída.',
+        'success'
+      );
     } catch {
       showToast('Erro ao excluir transação.', 'error');
     }
@@ -143,6 +174,9 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                     <span className={styles.txDate}>{formatDate(tx.date)}</span>
                     <span className={styles.txDesc}>{tx.description}</span>
                     <span className={styles.txSub}>{getSubName(tx.subcategoryId)}</span>
+                    {tx.paymentSource === 'vault' && (
+                      <span className={styles.vaultBadge}>🏦 Pago com o Cofre</span>
+                    )}
                     {tx.observation && (
                       <span className={styles.txObs}>{tx.observation}</span>
                     )}

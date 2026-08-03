@@ -14,6 +14,8 @@ import type { Category, Transaction, TransactionFormData } from '../../../types'
 import { dateToMonthKey, getDefaultDateForMonth } from '../../../utils/date';
 import { parseCurrencyInput } from '../../../utils/currency';
 import styles from './TransactionModal.module.css';
+import { useVaultStore } from '../../../store/vault.store';
+import { updateVaultLinkedExpense } from '../../../services/vault.service';
 
 interface TransactionModalProps {
   open: boolean;
@@ -34,6 +36,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     useTransactionStore();
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const vaultBalance = useVaultStore((state) => state.balance);
+  const updateVaultEntry = useVaultStore((state) => state.updateEntry);
 
   const categorySubs = subcategories.filter((s) => s.categoryId === category.id);
 
@@ -63,8 +67,14 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const validate = (): boolean => {
     const newErrors: typeof errors = {};
     if (!form.description.trim()) newErrors.description = 'Descrição obrigatória.';
-    if (!form.amount || parseCurrencyInput(form.amount) <= 0)
+    const parsedAmount = parseCurrencyInput(form.amount);
+    if (!form.amount || parsedAmount <= 0)
       newErrors.amount = 'Valor deve ser maior que zero.';
+    else if (
+      editingTransaction?.vaultEntryId &&
+      parsedAmount > vaultBalance + editingTransaction.amount
+    )
+      newErrors.amount = 'O Cofre não possui saldo suficiente para esse valor.';
     if (!form.date) newErrors.date = 'Data obrigatória.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -77,7 +87,22 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
     setLoading(true);
     try {
       if (editingTransaction) {
-        await updateTransaction(user.uid, editingTransaction.id, form);
+        if (editingTransaction.vaultEntryId) {
+          await updateVaultLinkedExpense(
+            user.uid,
+            editingTransaction.id,
+            editingTransaction.vaultEntryId,
+            form
+          );
+          updateVaultEntry(editingTransaction.vaultEntryId, {
+            description: form.description.trim(),
+            amount: parseCurrencyInput(form.amount),
+            date: form.date,
+            observation: form.observation?.trim() ?? '',
+          });
+        } else {
+          await updateTransaction(user.uid, editingTransaction.id, form);
+        }
         updateStore(editingTransaction.id, {
           ...form,
           amount: parseCurrencyInput(form.amount),

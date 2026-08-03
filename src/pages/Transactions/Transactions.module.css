@@ -82,6 +82,16 @@
   font-style: italic;
 }
 
+.vaultBadge {
+  width: fit-content;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(249, 168, 37, 0.14);
+  color: #b36b00;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
 .txAmount {
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);

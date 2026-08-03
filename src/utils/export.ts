@@ -52,6 +52,7 @@ export const exportReportToPDF = async (
     body: [
       ['Total de Receitas', formatCurrency(report.totalIncome)],
       ['Total de Gastos', formatCurrency(report.totalExpense)],
+      ['Gastos pagos com o Cofre', formatCurrency(report.totalVaultExpense)],
       ['Saldo', formatCurrency(report.balance)],
     ],
     theme: 'striped',
@@ -131,6 +132,7 @@ export const exportReportToXLSX = async (
     [],
     ['Total de Receitas', report.totalIncome],
     ['Total de Gastos', report.totalExpense],
+    ['Gastos pagos com o Cofre', report.totalVaultExpense],
     ['Saldo', report.balance],
   ];
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
@@ -156,7 +158,7 @@ export const exportReportToXLSX = async (
 
   // Aba de transações detalhadas
   const txData = [
-    ['Data', 'Tipo', 'Categoria', 'Subcategoria', 'Descrição', 'Observação', 'Valor'],
+    ['Data', 'Tipo', 'Origem', 'Categoria', 'Subcategoria', 'Descrição', 'Observação', 'Valor'],
     ...buildTransactionExportRows(report, categories, subcategories),
   ];
   const wsTx = XLSX.utils.aoa_to_sheet(txData);
@@ -183,6 +185,11 @@ export const buildTransactionExportRows = (
   return allTransactions.map((transaction) => [
     formatDate(transaction.date),
     transaction.type === 'income' ? 'Receita' : 'Gasto',
+    transaction.type === 'income'
+      ? ''
+      : transaction.paymentSource === 'vault'
+        ? 'Cofre'
+        : 'Saldo do mês',
     categoryNames.get(transaction.categoryId) ?? 'Categoria removida',
     transaction.subcategoryId
       ? subcategoryNames.get(transaction.subcategoryId) ?? 'Subcategoria removida'
