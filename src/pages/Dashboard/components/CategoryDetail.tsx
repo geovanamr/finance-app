@@ -21,6 +21,7 @@ import type { Category, Transaction, Subcategory } from '../../../types';
 import styles from './CategoryDetail.module.css';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useVaultStore } from '../../../store/vault.store';
+import { useDataOwner } from '../../../hooks/useDataOwner';
 
 interface CategoryDetailProps {
   category: Category;
@@ -40,6 +41,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   const { privateCurrency } = usePrivacy();
   const removeVaultEntry = useVaultStore((state) => state.removeEntry);
   const updateVaultEntry = useVaultStore((state) => state.updateEntry);
+  const { isReadOnly } = useDataOwner();
 
   const [txModalOpen, setTxModalOpen] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
@@ -53,7 +55,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
     categorySubs.find((s) => s.id === subId)?.name ?? 'Geral';
 
   const handleDeleteTx = async (tx: Transaction) => {
-    if (!user) return;
+    if (isReadOnly || !user) return;
     if (!confirm(`Excluir "${tx.description}"?`)) return;
 
     let deleteLinkedVaultEntry = false;
@@ -90,7 +92,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
   };
 
   const handleDeleteSub = async (sub: Subcategory) => {
-    if (!user) return;
+    if (isReadOnly || !user) return;
     if (!confirm(`Excluir subcategoria "${sub.name}"? As transações vinculadas não serão excluídas.`)) return;
     try {
       await deleteSubcategory(user.uid, sub.id);
@@ -121,9 +123,11 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <h3 className={styles.sectionTitle}>Subcategorias</h3>
-            <Button variant="ghost" size="sm" onClick={() => setSubModalOpen(true)}>
-              + Nova
-            </Button>
+            {!isReadOnly && (
+              <Button variant="ghost" size="sm" onClick={() => setSubModalOpen(true)}>
+                + Nova
+              </Button>
+            )}
           </div>
           {categorySubs.length === 0 ? (
             <p className={styles.empty}>Nenhuma subcategoria criada.</p>
@@ -137,13 +141,15 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                   <div key={sub.id} className={styles.subItem}>
                     <span className={styles.subName}>{sub.name}</span>
                     <span className={styles.subTotal}>{privateCurrency(subTotal)}</span>
-                    <button
-                      className={styles.deleteBtn}
-                      onClick={() => handleDeleteSub(sub)}
-                      aria-label={`Excluir subcategoria ${sub.name}`}
-                    >
-                      🗑️
-                    </button>
+                    {!isReadOnly && (
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={() => handleDeleteSub(sub)}
+                        aria-label={`Excluir subcategoria ${sub.name}`}
+                      >
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -155,13 +161,15 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <h3 className={styles.sectionTitle}>Lançamentos</h3>
-            <Button
-              variant={category.type === 'income' ? 'income' : 'expense'}
-              size="sm"
-              onClick={() => { setEditingTx(null); setTxModalOpen(true); }}
-            >
-              + Adicionar
-            </Button>
+            {!isReadOnly && (
+              <Button
+                variant={category.type === 'income' ? 'income' : 'expense'}
+                size="sm"
+                onClick={() => { setEditingTx(null); setTxModalOpen(true); }}
+              >
+                + Adicionar
+              </Button>
+            )}
           </div>
 
           {categoryTxs.length === 0 ? (
@@ -193,22 +201,24 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
                     >
                       {privateCurrency(tx.amount)}
                     </span>
-                    <div className={styles.txActions}>
-                      <button
-                        className={styles.editBtn}
-                        onClick={() => { setEditingTx(tx); setTxModalOpen(true); }}
-                        aria-label="Editar"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={() => handleDeleteTx(tx)}
-                        aria-label="Excluir"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    {!isReadOnly && (
+                      <div className={styles.txActions}>
+                        <button
+                          className={styles.editBtn}
+                          onClick={() => { setEditingTx(tx); setTxModalOpen(true); }}
+                          aria-label="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          className={styles.deleteBtn}
+                          onClick={() => handleDeleteTx(tx)}
+                          aria-label="Excluir"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -218,7 +228,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
       </Modal>
 
       {/* Modal de transação */}
-      {txModalOpen && (
+      {txModalOpen && !isReadOnly && (
         <TransactionModal
           open={txModalOpen}
           onClose={() => { setTxModalOpen(false); setEditingTx(null); }}
@@ -229,7 +239,7 @@ export const CategoryDetail: React.FC<CategoryDetailProps> = ({
       )}
 
       {/* Modal de subcategoria */}
-      {subModalOpen && (
+      {subModalOpen && !isReadOnly && (
         <SubcategoryModal
           open={subModalOpen}
           onClose={() => setSubModalOpen(false)}

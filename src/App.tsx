@@ -15,6 +15,7 @@ import { useTransactionStore } from './store/transaction.store';
 import { useVaultStore } from './store/vault.store';
 import { useUIStore } from './store/ui.store';
 import { useCategoryStore } from './store/category.store';
+import { useMasterStore } from './store/master.store';
 
 const Login = lazy(() => import('./pages/LoginV2/LoginV2').then((module) => ({ default: module.Login })));
 const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard').then((module) => ({ default: module.Dashboard })));
@@ -35,6 +36,7 @@ const App: React.FC = () => {
         useVaultStore.getState().reset();
         useUIStore.getState().reset();
         useCategoryStore.getState().reset();
+        useMasterStore.getState().reset();
       }
       setUser(nextUser);
     });

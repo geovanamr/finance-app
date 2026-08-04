@@ -21,6 +21,21 @@ dados executadas no Firebase.
 Existe uma função interna de criação de conta, mas o aplicativo não oferece
 autocadastro na interface. Os usuários são administrados no Firebase.
 
+### Acesso master somente para visualização
+
+- O UID `DRvfe0BWNGVcy6KLm2bOM2YJRDJ3` identifica a conta master.
+- Cada usuário atualiza o próprio perfil no diretório `accountDirectory` ao
+  entrar no aplicativo. Nenhuma senha ou token é armazenado nesse diretório.
+- Contas antigas aparecem para o master depois do primeiro login realizado
+  após a implantação desta funcionalidade.
+- A conta master possui um seletor para abrir os painéis das demais contas.
+- Ao visualizar outra conta, ações de criação, edição, exclusão, parcelamento,
+  objetivo mensal e movimentações do Cofre são ocultadas.
+- As regras do Firestore também bloqueiam qualquer escrita do master nos dados
+  de outra conta, independentemente da interface.
+- Ao retornar à própria conta, o master continua com as permissões normais de
+  edição dos próprios dados.
+
 ## 2. Navegação e preferências
 
 - **Navegação responsiva:** menu superior no computador e menu inferior no
@@ -180,8 +195,13 @@ Cada conta utiliza documentos abaixo de `users/{uid}`:
 - `installmentPlans`: planos de parcelamento;
 - `vault`: movimentações do Cofre.
 
-As regras do Firestore exigem autenticação e permitem que cada usuário acesse
-somente os documentos sob o próprio `uid`.
+O diretório global `accountDirectory` guarda apenas UID, e-mail, nome e datas
+de criação, último acesso e sincronização. Cada usuário pode atualizar somente
+o próprio registro e apenas o master pode listar todo o diretório.
+
+As regras do Firestore exigem autenticação. Usuários comuns acessam somente os
+documentos sob o próprio `uid`; a conta master pode ler os documentos das
+demais contas, mas não pode alterá-los.
 
 ## 14. Funções internas sem interface própria
 

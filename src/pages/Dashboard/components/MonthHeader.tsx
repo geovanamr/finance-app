@@ -7,6 +7,7 @@ import { SavingsGoalModal } from './SavingsGoalModal';
 import styles from './MonthHeader.module.css';
 import { usePrivacy } from '../../../context/PrivacyContext';
 import { useNavigate } from 'react-router-dom';
+import { useDataOwner } from '../../../hooks/useDataOwner';
 
 interface MonthHeaderProps {
   monthKey: string;
@@ -21,6 +22,7 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
   const { monthlySummary } = useTransactionStore();
   const { privateCurrency } = usePrivacy();
   const navigate = useNavigate();
+  const { isReadOnly } = useDataOwner();
 
   return (
     <>
@@ -39,13 +41,15 @@ export const MonthHeader: React.FC<MonthHeaderProps> = ({ monthKey }) => {
           <Button variant="ghost" size="sm" onClick={() => navigate('/categories')}>
             🏷️ Categorias
           </Button>
-          <Button variant="ghost" size="sm" onClick={openSavingsGoalModal}>
-            🎯 Objetivo
-          </Button>
+          {!isReadOnly && (
+            <Button variant="ghost" size="sm" onClick={openSavingsGoalModal}>
+              🎯 Objetivo
+            </Button>
+          )}
         </div>
       </div>
 
-      {savingsGoalModal && (
+      {savingsGoalModal && !isReadOnly && (
         <SavingsGoalModal
           open
           onClose={closeSavingsGoalModal}

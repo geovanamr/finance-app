@@ -73,6 +73,16 @@ As consultas atuais usam apenas índices de campo único, criados automaticament
 pelo Firestore. O arquivo `firestore.indexes.json` fica versionado para futuras
 consultas que exijam índices compostos.
 
+### Conta master
+
+O UID master fica em `src/config/constants.ts` e também é validado em
+`firestore.rules`. A conta master pode selecionar e visualizar os dados das
+demais contas, mas as regras impedem alterações fora do próprio UID.
+
+O diretório `accountDirectory` é atualizado por cada usuário no login. Por
+isso, uma conta existente passa a aparecer no seletor master depois de entrar
+ao menos uma vez na versão que contém essa funcionalidade.
+
 ## Qualidade
 
 ```bash

@@ -7,6 +7,7 @@ import { NavLink } from 'react-router-dom';
 import { useUIStore } from '../../store/ui.store';
 import { InstallmentModal } from '../../pages/Dashboard/components/InstallmentModal';
 import styles from './BottomNav.module.css';
+import { useDataOwner } from '../../hooks/useDataOwner';
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: '🏠', label: 'Início' },
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
 
 export const BottomNav: React.FC = () => {
   const { installmentModal, openInstallmentModal, closeInstallmentModal } = useUIStore();
+  const { isReadOnly } = useDataOwner();
 
   return (
     <>
@@ -37,17 +39,19 @@ export const BottomNav: React.FC = () => {
           </NavLink>
         ))}
 
-        <button
-          className={styles.item}
-          onClick={openInstallmentModal}
-          aria-label="Parcelar"
-        >
-          <span className={styles.icon} aria-hidden="true">📅</span>
-          <span className={styles.label}>Parcelar</span>
-        </button>
+        {!isReadOnly && (
+          <button
+            className={styles.item}
+            onClick={openInstallmentModal}
+            aria-label="Parcelar"
+          >
+            <span className={styles.icon} aria-hidden="true">📅</span>
+            <span className={styles.label}>Parcelar</span>
+          </button>
+        )}
       </nav>
 
-      {installmentModal && (
+      {installmentModal && !isReadOnly && (
         <InstallmentModal open onClose={closeInstallmentModal} />
       )}
     </>

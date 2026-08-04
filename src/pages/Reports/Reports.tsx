@@ -3,7 +3,6 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { useAuthStore } from '../../store/auth.store';
 import { useTransactionStore } from '../../store/transaction.store';
 import { getTransactionsByPeriod } from '../../services/transaction.service';
 import { buildCostCenterReport } from '../../utils/reports';
@@ -18,9 +17,10 @@ import type { CostCenterReport } from '../../types';
 import styles from './Reports.module.css';
 import { usePrivacy } from '../../context/PrivacyContext';
 import { useCategoryStore } from '../../store/category.store';
+import { useDataOwner } from '../../hooks/useDataOwner';
 
 export const Reports: React.FC = () => {
-  const { user } = useAuthStore();
+  const { dataOwnerId } = useDataOwner();
   const { subcategories, loadingSubcategories } = useTransactionStore();
   const { showToast } = useToast();
   const { hidden, privateCurrency } = usePrivacy();
@@ -34,7 +34,7 @@ export const Reports: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
-    if (!user) return;
+    if (!dataOwnerId) return;
     if (loadingSubcategories || loadingCategories) {
       showToast('Aguarde o carregamento das categorias.', 'info');
       return;
@@ -46,7 +46,7 @@ export const Reports: React.FC = () => {
 
     setLoading(true);
     try {
-      const transactions = await getTransactionsByPeriod(user.uid, fromMonth, toMonth);
+      const transactions = await getTransactionsByPeriod(dataOwnerId, fromMonth, toMonth);
       const generated = buildCostCenterReport(
         transactions,
         subcategories,

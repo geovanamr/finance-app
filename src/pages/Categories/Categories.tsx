@@ -8,6 +8,7 @@ import { deleteCategory } from '../../services/category.service';
 import { CategoryModal } from './components/CategoryModal';
 import type { Category, TransactionType } from '../../types';
 import styles from './Categories.module.css';
+import { useDataOwner } from '../../hooks/useDataOwner';
 
 export const Categories: React.FC = () => {
   const { categories, loading, removeCategory } = useCategoryStore();
@@ -15,6 +16,7 @@ export const Categories: React.FC = () => {
   const { showToast } = useToast();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const { isReadOnly } = useDataOwner();
 
   const openNew = () => {
     setEditingCategory(null);
@@ -27,7 +29,7 @@ export const Categories: React.FC = () => {
   };
 
   const handleDelete = async (category: Category) => {
-    if (!user || !confirm(`Excluir a categoria "${category.name}"?`)) return;
+    if (isReadOnly || !user || !confirm(`Excluir a categoria "${category.name}"?`)) return;
     try {
       await deleteCategory(user.uid, category.id);
       removeCategory(category.id);
@@ -61,14 +63,16 @@ export const Categories: React.FC = () => {
                   <strong>{category.name}</strong>
                   <span>{type === 'income' ? 'Receita' : 'Despesa'}</span>
                 </div>
-                <div className={styles.actions}>
-                  <button onClick={() => openEdit(category)} aria-label={`Editar ${category.name}`}>
-                    ✏️
-                  </button>
-                  <button onClick={() => void handleDelete(category)} aria-label={`Excluir ${category.name}`}>
-                    🗑️
-                  </button>
-                </div>
+                {!isReadOnly && (
+                  <div className={styles.actions}>
+                    <button onClick={() => openEdit(category)} aria-label={`Editar ${category.name}`}>
+                      ✏️
+                    </button>
+                    <button onClick={() => void handleDelete(category)} aria-label={`Excluir ${category.name}`}>
+                      🗑️
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -82,9 +86,9 @@ export const Categories: React.FC = () => {
       <div className={styles.header}>
         <div>
           <h1>Categorias</h1>
-          <p>Organize as categorias usadas nos seus lançamentos.</p>
+          <p>{isReadOnly ? 'Categorias da conta selecionada — somente visualização.' : 'Organize as categorias usadas nos seus lançamentos.'}</p>
         </div>
-        <Button onClick={openNew}>+ Nova categoria</Button>
+        {!isReadOnly && <Button onClick={openNew}>+ Nova categoria</Button>}
       </div>
 
       {loading ? (
@@ -96,7 +100,7 @@ export const Categories: React.FC = () => {
         </div>
       )}
 
-      {modalOpen && (
+      {modalOpen && !isReadOnly && (
         <CategoryModal
           open
           category={editingCategory}

@@ -5,6 +5,10 @@
 export const APP_NAME = 'Finance App';
 export const APP_VERSION = '1.0.0';
 
+// Conta com acesso de leitura aos dados dos demais usuários.
+// O UID identifica a conta no Firebase Authentication e não é uma credencial secreta.
+export const MASTER_UID = 'DRvfe0BWNGVcy6KLm2bOM2YJRDJ3';
+
 // Coleções do Firestore
 export const COLLECTIONS = {
   CATEGORIES: 'categories',
@@ -13,6 +17,7 @@ export const COLLECTIONS = {
   SAVINGS_GOALS: 'savingsGoals',
   INSTALLMENT_PLANS: 'installmentPlans',
   VAULT: 'vault',
+  ACCOUNT_DIRECTORY: 'accountDirectory',
 } as const;
 
 // Formato de datas

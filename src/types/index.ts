@@ -6,6 +6,17 @@
 
 export type TransactionType = 'income' | 'expense';
 
+// --- Diretório de contas visível somente para o usuário master ---
+
+export interface AccountProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  createdAt: string;
+  lastSignInAt: string;
+  syncedAt: string;
+}
+
 // --- Categorias ---
 
 export interface Category {

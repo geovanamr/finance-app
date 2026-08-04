@@ -16,6 +16,7 @@ import { VaultEntryModal } from './components/VaultEntryModal';
 import type { VaultEntry, VaultEntryType } from '../../types';
 import styles from './Vault.module.css';
 import { useTransactionStore } from '../../store/transaction.store';
+import { useDataOwner } from '../../hooks/useDataOwner';
 
 // Ícone SVG do cofre
 const VaultIcon = () => (
@@ -50,12 +51,13 @@ export const Vault: React.FC = () => {
   const updateTransaction = useTransactionStore((state) => state.updateTransaction);
   const { user } = useAuthStore();
   const { showToast } = useToast();
+  const { isReadOnly } = useDataOwner();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<VaultEntryType>('deposit');
 
   const handleDelete = async (entry: VaultEntry) => {
-    if (!user) return;
+    if (isReadOnly || !user) return;
     if (!confirm(`Excluir "${entry.description}"?`)) return;
 
     let deleteLinkedTransaction = false;
@@ -114,14 +116,16 @@ export const Vault: React.FC = () => {
       </div>
 
       {/* Ações */}
-      <div className={styles.actions}>
-        <Button variant="income" fullWidth onClick={() => openModal('deposit')} icon={<DepositIcon />}>
-          Depositar
-        </Button>
-        <Button variant="expense" fullWidth onClick={() => openModal('withdraw')} icon={<WithdrawIcon />}>
-          Retirar
-        </Button>
-      </div>
+      {!isReadOnly && (
+        <div className={styles.actions}>
+          <Button variant="income" fullWidth onClick={() => openModal('deposit')} icon={<DepositIcon />}>
+            Depositar
+          </Button>
+          <Button variant="expense" fullWidth onClick={() => openModal('withdraw')} icon={<WithdrawIcon />}>
+            Retirar
+          </Button>
+        </div>
+      )}
 
       {/* Histórico */}
       <div className={styles.history}>
@@ -168,13 +172,15 @@ export const Vault: React.FC = () => {
                   ].join(' ')}>
                     {entry.type === 'deposit' ? '+' : '-'} {privateCurrency(entry.amount)}
                   </span>
-                  <button
-                    className={styles.deleteBtn}
-                    onClick={() => handleDelete(entry)}
-                    aria-label="Excluir"
-                  >
-                    🗑️
-                  </button>
+                  {!isReadOnly && (
+                    <button
+                      className={styles.deleteBtn}
+                      onClick={() => handleDelete(entry)}
+                      aria-label="Excluir"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -182,7 +188,7 @@ export const Vault: React.FC = () => {
         )}
       </div>
 
-      {modalOpen && (
+      {modalOpen && !isReadOnly && (
         <VaultEntryModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}

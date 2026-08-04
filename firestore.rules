@@ -2,8 +2,38 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMaster() {
+      return signedIn() && request.auth.uid == 'DRvfe0BWNGVcy6KLm2bOM2YJRDJ3';
+    }
+
+    // Diretório mínimo de contas. Cada usuário mantém apenas o próprio perfil;
+    // somente a conta master pode listar os demais.
+    match /accountDirectory/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isMaster());
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'email',
+          'displayName',
+          'createdAt',
+          'lastSignInAt',
+          'syncedAt'
+        ]);
+      allow delete: if false;
+    }
+
     match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // O master pode apenas ler outras contas. Escritas continuam exclusivas
+      // do proprietário, mesmo que a interface seja modificada no navegador.
+      allow read: if signedIn() && (request.auth.uid == userId || isMaster());
+      allow write: if signedIn() && request.auth.uid == userId;
     }
   }
 }
