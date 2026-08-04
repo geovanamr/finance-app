@@ -5,7 +5,7 @@ import {
   getDocs,
   setDoc,
 } from 'firebase/firestore';
-import { COLLECTIONS } from '../config/constants';
+import { COLLECTIONS, MASTER_UID } from '../config/constants';
 import { db } from '../config/firebase';
 import type { AccountProfile } from '../types';
 
@@ -31,5 +31,6 @@ export const getAccountProfiles = async (): Promise<AccountProfile[]> => {
   const snapshot = await getDocs(directoryCollection());
   return snapshot.docs
     .map((item) => item.data() as AccountProfile)
+    .filter((profile) => profile.uid !== MASTER_UID)
     .sort((a, b) => (a.email || a.displayName).localeCompare(b.email || b.displayName));
 };

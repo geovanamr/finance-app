@@ -28,13 +28,17 @@ autocadastro na interface. Os usuários são administrados no Firebase.
   entrar no aplicativo. Nenhuma senha ou token é armazenado nesse diretório.
 - Contas antigas aparecem para o master depois do primeiro login realizado
   após a implantação desta funcionalidade.
-- A conta master possui um seletor para abrir os painéis das demais contas.
+- A conta master abre diretamente uma tela administrativa que lista todas as
+  contas sincronizadas, com busca por nome ou e-mail.
+- O master precisa selecionar uma conta antes de acessar qualquer página
+  financeira e pode voltar à lista para trocar de usuário.
+- A conta master não possui dashboard, categorias, lançamentos, meta ou Cofre
+  próprios.
 - Ao visualizar outra conta, ações de criação, edição, exclusão, parcelamento,
   objetivo mensal e movimentações do Cofre são ocultadas.
-- As regras do Firestore também bloqueiam qualquer escrita do master nos dados
-  de outra conta, independentemente da interface.
-- Ao retornar à própria conta, o master continua com as permissões normais de
-  edição dos próprios dados.
+- As regras do Firestore bloqueiam qualquer escrita do master, inclusive a
+  criação de documentos financeiros no próprio UID administrativo,
+  independentemente da interface.
 
 ## 2. Navegação e preferências
 
@@ -201,7 +205,7 @@ o próprio registro e apenas o master pode listar todo o diretório.
 
 As regras do Firestore exigem autenticação. Usuários comuns acessam somente os
 documentos sob o próprio `uid`; a conta master pode ler os documentos das
-demais contas, mas não pode alterá-los.
+demais contas, mas não pode criar nem alterar dados financeiros.
 
 ## 14. Funções internas sem interface própria
 

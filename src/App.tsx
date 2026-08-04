@@ -16,6 +16,7 @@ import { useVaultStore } from './store/vault.store';
 import { useUIStore } from './store/ui.store';
 import { useCategoryStore } from './store/category.store';
 import { useMasterStore } from './store/master.store';
+import { isMasterUser } from './utils/master';
 
 const Login = lazy(() => import('./pages/LoginV2/LoginV2').then((module) => ({ default: module.Login })));
 const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard').then((module) => ({ default: module.Dashboard })));
@@ -23,6 +24,18 @@ const Transactions = lazy(() => import('./pages/Transactions/Transactions').then
 const Reports = lazy(() => import('./pages/Reports/Reports').then((module) => ({ default: module.Reports })));
 const Vault = lazy(() => import('./pages/Vault/Vault').then((module) => ({ default: module.Vault })));
 const Categories = lazy(() => import('./pages/Categories/Categories').then((module) => ({ default: module.Categories })));
+const MasterAccounts = lazy(() => import('./pages/MasterAccounts/MasterAccounts').then((module) => ({ default: module.MasterAccounts })));
+
+const FinanceAccess: React.FC = () => {
+  const user = useAuthStore((state) => state.user);
+  const selectedAccountUid = useMasterStore((state) => state.selectedAccountUid);
+
+  if (isMasterUser(user?.uid ?? null) && !selectedAccountUid) {
+    return <Navigate to="/accounts" replace />;
+  }
+
+  return <AppShell />;
+};
 
 const App: React.FC = () => {
   const { user, loading, setUser } = useAuthStore();
@@ -58,19 +71,35 @@ const App: React.FC = () => {
           {/* Rota pública */}
           <Route
             path="/login"
-            element={user ? <Navigate to="/dashboard" replace /> : <Login />}
+            element={user
+              ? <Navigate to={isMasterUser(user.uid) ? '/accounts' : '/dashboard'} replace />
+              : <Login />}
           />
 
           {/* Rotas protegidas */}
           {user ? (
-            <Route element={<AppShell />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/vault" element={<Vault />} />
+            <>
+              <Route
+                path="/accounts"
+                element={isMasterUser(user.uid)
+                  ? <MasterAccounts />
+                  : <Navigate to="/dashboard" replace />}
+              />
+              <Route element={<FinanceAccess />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/transactions" element={<Transactions />} />
+                <Route path="/vault" element={<Vault />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/reports" element={<Reports />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Route>
+              </Route>
+              <Route
+                path="*"
+                element={<Navigate
+                  to={isMasterUser(user.uid) ? '/accounts' : '/dashboard'}
+                  replace
+                />}
+              />
+            </>
           ) : (
             <Route path="*" element={<Navigate to="/login" replace />} />
           )}

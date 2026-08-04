@@ -33,7 +33,9 @@ service cloud.firestore {
       // O master pode apenas ler outras contas. Escritas continuam exclusivas
       // do proprietário, mesmo que a interface seja modificada no navegador.
       allow read: if signedIn() && (request.auth.uid == userId || isMaster());
-      allow write: if signedIn() && request.auth.uid == userId;
+      // A conta master é exclusivamente administrativa e não possui dados
+      // financeiros próprios.
+      allow write: if signedIn() && request.auth.uid == userId && !isMaster();
     }
   }
 }

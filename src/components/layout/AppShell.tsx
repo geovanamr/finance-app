@@ -18,11 +18,7 @@ import { useCategoryStore } from '../../store/category.store';
 import { getAllCategories, seedDefaultCategories } from '../../services/category.service';
 import { MasterAccountBar } from '../master/MasterAccountBar';
 import { useDataOwner } from '../../hooks/useDataOwner';
-import {
-  getAccountProfiles,
-  syncOwnAccountProfile,
-} from '../../services/accountDirectory.service';
-import { useMasterStore } from '../../store/master.store';
+import { syncOwnAccountProfile } from '../../services/accountDirectory.service';
 
 export const AppShell: React.FC = () => {
   const user = useAuthStore((state) => state.user);
@@ -34,31 +30,23 @@ export const AppShell: React.FC = () => {
   const { showToast } = useToast();
   const setCategories = useCategoryStore((state) => state.setCategories);
   const setCategoriesLoading = useCategoryStore((state) => state.setLoading);
-  const setAccounts = useMasterStore((state) => state.setAccounts);
-  const setAccountsLoading = useMasterStore((state) => state.setLoading);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || isMaster) return;
     let cancelled = false;
 
     const syncDirectory = async () => {
-      if (isMaster) setAccountsLoading(true);
       try {
         await syncOwnAccountProfile(user);
-        if (isMaster) {
-          const accounts = await getAccountProfiles();
-          if (!cancelled) setAccounts(accounts);
-        }
       } catch {
         if (cancelled) return;
-        if (isMaster) setAccountsLoading(false);
         showToast('Não foi possível sincronizar o diretório de contas.', 'warning');
       }
     };
 
     void syncDirectory();
     return () => { cancelled = true; };
-  }, [isMaster, setAccounts, setAccountsLoading, showToast, user]);
+  }, [isMaster, showToast, user]);
 
   useEffect(() => {
     if (!dataOwnerId || !user) return;

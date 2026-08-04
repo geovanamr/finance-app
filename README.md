@@ -76,11 +76,16 @@ consultas que exijam índices compostos.
 ### Conta master
 
 O UID master fica em `src/config/constants.ts` e também é validado em
-`firestore.rules`. A conta master pode selecionar e visualizar os dados das
-demais contas, mas as regras impedem alterações fora do próprio UID.
+`firestore.rules`. Ao entrar, a conta master abre um painel administrativo com
+a lista de usuários. Depois de selecionar uma conta, pode visualizar seus
+dados financeiros sem alterá-los.
+
+A conta master não possui dashboard financeiro próprio. Sem um usuário
+selecionado, as rotas financeiras redirecionam para a lista de contas e as
+regras impedem a criação de documentos financeiros pelo UID master.
 
 O diretório `accountDirectory` é atualizado por cada usuário no login. Por
-isso, uma conta existente passa a aparecer no seletor master depois de entrar
+isso, uma conta existente passa a aparecer no painel master depois de entrar
 ao menos uma vez na versão que contém essa funcionalidade.
 
 ## Qualidade

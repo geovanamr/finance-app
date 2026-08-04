@@ -14,8 +14,8 @@ describe('acesso master', () => {
     expect(isReadOnlyAccount(MASTER_UID, 'another-user')).toBe(true);
   });
 
-  it('mantém edição quando o master visualiza a própria conta', () => {
-    expect(resolveDataOwner(MASTER_UID, null)).toBe(MASTER_UID);
-    expect(isReadOnlyAccount(MASTER_UID, MASTER_UID)).toBe(false);
+  it('não atribui uma conta financeira própria ao master', () => {
+    expect(resolveDataOwner(MASTER_UID, null)).toBeNull();
+    expect(isReadOnlyAccount(MASTER_UID, null)).toBe(false);
   });
 });
